@@ -58,5 +58,3 @@ material = SubResource("StandardMaterial3D_r8oc7")
 
 [node name="PlayerCharacter" parent="." instance=ExtResource("1_oa3qg")]
 transform = Transform3D(0.99995, 0.0100006, 0, -0.0100006, 0.99995, 0, 0, 0, 1, 0, 0.82965, 0)
-MovementForce = 2700.0
-Friction = 40.0
