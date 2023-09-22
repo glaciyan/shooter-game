@@ -16,5 +16,6 @@ shape = SubResource("BoxShape3D_x6c7s")
 [node name="CameraController" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 script = ExtResource("2_gqrom")
+metadata/_edit_group_ = true
 
 [node name="Camera3D" type="Camera3D" parent="CameraController"]

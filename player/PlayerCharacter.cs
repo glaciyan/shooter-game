@@ -78,39 +78,47 @@ public partial class PlayerCharacter : CharacterBody3D
     private Vector3 Movement(double delta, Vector3 velocity)
     {
         // GD.Print(-_camera.Transform.Basis.Z);
-        var onFloor = IsOnFloor();
+        var inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
 
-        var inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back").Normalized();
-
-        var camVec = Vector2.Down.Rotated(_viewPoint.X);
-        var forwardVector = new Vector2(camVec.X, camVec.Y);
+        var forwardVector = Vector2.Down.Rotated(_viewPoint.X);
         // using rotation matrix to rotate by 90
         var sidewaysVector = new Vector2(forwardVector.Y, -forwardVector.X);
         var forwardDirection = forwardVector * inputDir.Y;
         var sidewaysDirection = sidewaysVector * inputDir.X;
-        var direction2D = forwardDirection + sidewaysDirection;
-        var direction = new Vector3(direction2D.X, 0, direction2D.Y).Normalized();
+        var direction = (forwardDirection + sidewaysDirection).Normalized();
+
+        DebugDraw3D.DrawRay(Position, new Vector3(direction.X, 0, direction.Y), 1, Colors.DarkCyan);
 
         var directionStrength = direction;
-        if (!onFloor)
+        if (!IsOnFloor())
         {
-            directionStrength.Z *= AirSpeedControl;
-            directionStrength.X *= AirStrafeControl;
+            directionStrength *= 0.2f;
         }
 
-        velocity.X = Acceleration(delta, velocity.X, directionStrength.X, direction.X, onFloor);
-        velocity.Z = Acceleration(delta, velocity.Z, directionStrength.Z, direction.Z, onFloor);
+        DebugDraw3D.DrawArrowRay(Position, new Vector3(directionStrength.X, 0, directionStrength.Y), 1,
+            Colors.DarkCyan);
+        velocity.X = Acceleration(delta, velocity.X, directionStrength.X, direction.X, IsOnFloor());
+        velocity.Z = Acceleration(delta, velocity.Z, directionStrength.Y, direction.Y, IsOnFloor());
 
-        if (!Mathf.IsZeroApprox(direction.Length())) return velocity;
+        if (!Mathf.IsZeroApprox(direction.Length()))
+        {
+            DebugDraw3D.DrawRay(Position - new Vector3(0, 0.5f, 0), velocity, velocity.Length(), Colors.Blue);
+            return velocity;
+        }
 
         // decelerate with friction
-        var friction = onFloor ? Friction : Friction * AirFrictionFactor;
+        var friction = IsOnFloor() ? Friction : Friction * AirFrictionFactor;
 
         // using movementDirection here because MoveToward would equally slow down on both axes causing
-        // shifting to the side in deceleration 
+        // shifting to the side in deceleration
         var movementDirection = new Vector2(velocity.X, velocity.Z).Normalized();
         velocity.X = Mathf.MoveToward(velocity.X, 0, friction * (float)delta * Math.Abs(movementDirection.X));
         velocity.Z = Mathf.MoveToward(velocity.Z, 0, friction * (float)delta * Math.Abs(movementDirection.Y));
+
+        DebugDraw3D.DrawRay(Position - new Vector3(0, 0.5f, 0), velocity, velocity.Length(), Colors.Red);
+        var graph = DebugDraw2D.GetGraph("speed") ?? DebugDraw2D.CreateGraph("speed");
+        graph.BufferSize = 1000;
+        DebugDraw2D.GraphUpdateData("speed", velocity.Length());
 
         return velocity;
     }
@@ -125,6 +133,9 @@ public partial class PlayerCharacter : CharacterBody3D
             // limit velocity
             var max = MaxVelocity * Math.Abs(maxRatio);
             v = Math.Clamp(v, -max, max);
+            // var graph = DebugDraw2D.GetGraph("maxspeed") ?? DebugDraw2D.CreateGraph("maxspeed");
+            // graph.BufferSize = 1000;
+            // DebugDraw2D.GraphUpdateData("maxspeed", max);
         }
 
         return v;
