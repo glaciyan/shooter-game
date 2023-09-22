@@ -5,7 +5,7 @@ namespace shootergame.player;
 
 public partial class PlayerCharacter : CharacterBody3D
 {
-    [ExportGroup("Movement")]
+    [ExportGroup("Moving")]
     [Export]
     public float MaxVelocity = 5.0f;
 
@@ -18,8 +18,15 @@ public partial class PlayerCharacter : CharacterBody3D
     [Export]
     public float MassKg = 60.0f;
 
+    [ExportGroup("Jumping")]
+    [Export]
+    public float JumpForceN = 450.0f;
+
     [Export]
     public float TerminalVelocity = 55.0f;
+
+    [Export]
+    public float GravityMultiplier = 2.0f;
 
     [ExportSubgroup("Air Control")]
     [Export(PropertyHint.Range, "0, 1, 0.1")]
@@ -32,9 +39,6 @@ public partial class PlayerCharacter : CharacterBody3D
     public float AirFrictionFactor = 0.05f;
 
     [ExportSubgroup("")]
-    [Export]
-    public float JumpForceN = 300.0f;
-
     [ExportGroup("Camera")]
     [Export(PropertyHint.Range, "0.1, 10, 0.1")]
     public float LookaroundSpeed = 1.0f;
@@ -44,13 +48,13 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
 
-    private Camera3D _camera;
-
     private Vector2 _viewPoint = new(0.0f, 0.0f);
+
+    private CameraController _cameraController;
 
     public override void _Ready()
     {
-        _camera = GetNode<Camera3D>("Camera3D");
+        _cameraController = GetNode<CameraController>("CameraController");
         Input.MouseMode = Input.MouseModeEnum.Captured;
     }
 
@@ -62,11 +66,7 @@ public partial class PlayerCharacter : CharacterBody3D
         _viewPoint.Y += mouseMotion.Relative.Y * LookaroundSpeed * _lookaroundSpeedReduction;
         _viewPoint.Y = (float)Math.Clamp(_viewPoint.Y, -Math.PI / 2, Math.PI / 2);
 
-        var transform = _camera.Transform;
-        transform.Basis = Basis.Identity;
-        _camera.Transform = transform;
-        _camera.RotateObjectLocal(Vector3.Up, -_viewPoint.X);
-        _camera.RotateObjectLocal(Vector3.Right, -_viewPoint.Y);
+        _cameraController.RotateTo(_viewPoint);
     }
 
     public override void _Process(double delta)
@@ -133,7 +133,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private Vector3 Gravity(double delta, Vector3 velocity)
     {
         if (!IsOnFloor())
-            velocity.Y -= _gravity * (float)delta;
+            velocity.Y -= _gravity * GravityMultiplier * (float)delta;
 
         velocity.Y = Math.Clamp(velocity.Y, -TerminalVelocity, float.MaxValue);
 

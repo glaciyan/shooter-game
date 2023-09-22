@@ -1,17 +1,20 @@
-[gd_scene load_steps=3 format=3 uid="uid://b3gr35vagtxy8"]
+[gd_scene load_steps=4 format=3 uid="uid://b3gr35vagtxy8"]
 
 [ext_resource type="Script" path="res://player/PlayerCharacter.cs" id="1_ri2a1"]
+[ext_resource type="Script" path="res://player/CameraController.cs" id="2_gqrom"]
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_dve0w"]
-height = 1.8
-radius = 0.3
+[sub_resource type="BoxShape3D" id="BoxShape3D_x6c7s"]
+size = Vector3(0.6, 1.8, 0.6)
 
 [node name="PlayerCharacter" type="CharacterBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 script = ExtResource("1_ri2a1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-shape = SubResource("CylinderShape3D_dve0w")
+shape = SubResource("BoxShape3D_x6c7s")
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="CameraController" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+script = ExtResource("2_gqrom")
+
+[node name="Camera3D" type="Camera3D" parent="CameraController"]
