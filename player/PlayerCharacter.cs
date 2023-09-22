@@ -44,7 +44,7 @@ public partial class PlayerCharacter : CharacterBody3D
     public float LookaroundSpeed = 1.0f;
 
 
-    private float _lookaroundSpeedReduction = 0.002f;
+    private const float LookaroundSpeedReduction = 0.002f;
 
     private float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
 
@@ -62,8 +62,8 @@ public partial class PlayerCharacter : CharacterBody3D
     {
         if (@event is not InputEventMouseMotion mouseMotion) return;
 
-        _viewPoint.X += mouseMotion.Relative.X * LookaroundSpeed * _lookaroundSpeedReduction;
-        _viewPoint.Y += mouseMotion.Relative.Y * LookaroundSpeed * _lookaroundSpeedReduction;
+        _viewPoint.X += mouseMotion.Relative.X * LookaroundSpeed * LookaroundSpeedReduction;
+        _viewPoint.Y += mouseMotion.Relative.Y * LookaroundSpeed * LookaroundSpeedReduction;
         _viewPoint.Y = (float)Math.Clamp(_viewPoint.Y, -Math.PI / 2, Math.PI / 2);
 
         _cameraController.RotateTo(_viewPoint);
