@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://c6356ubeoiydj"]
+[gd_scene load_steps=8 format=3 uid="uid://c6356ubeoiydj"]
 
 [ext_resource type="PackedScene" uid="uid://b3gr35vagtxy8" path="res://player/player-character.tscn" id="1_oa3qg"]
 
@@ -16,6 +16,9 @@ sky = SubResource("Sky_6kt2i")
 tonemap_mode = 2
 sdfgi_enabled = true
 glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2qb2x"]
+albedo_color = Color(0.631373, 0.631373, 0.631373, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_clqsw"]
 albedo_color = Color(0.176471, 0.203922, 0.4, 1)
@@ -39,6 +42,7 @@ environment = SubResource("Environment_ofm0g")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.26862, 0)
 use_collision = true
 size = Vector3(50, 1, 50)
+material = SubResource("StandardMaterial3D_2qb2x")
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="WorldGeometry"]
 transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, -1.99903, -0.268618, -1.93265)
