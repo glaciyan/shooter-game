@@ -1,6 +1,6 @@
 using Godot;
 
-namespace shootergame.player;
+namespace shootergame.player.script;
 
 public partial class CameraController : Node3D
 {
@@ -8,7 +8,7 @@ public partial class CameraController : Node3D
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		_camera = GetNode<Camera3D>("Camera3D");
+		_camera = GetNode<Camera3D>("MainCamera");
 	}
 
 	public void RotateTo(Vector2 viewPoint)

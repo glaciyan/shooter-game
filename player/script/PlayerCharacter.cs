@@ -1,8 +1,10 @@
 using System;
 using System.Runtime.CompilerServices;
 using Godot;
+using Vector2 = Godot.Vector2;
+using Vector3 = Godot.Vector3;
 
-namespace shootergame.player;
+namespace shootergame.player.script;
 
 public partial class PlayerCharacter : CharacterBody3D
 {
@@ -44,40 +46,46 @@ public partial class PlayerCharacter : CharacterBody3D
     [Export(PropertyHint.Range, "0.1, 10, 0.1")]
     public float LookaroundSpeed = 1.0f;
 
-
-    private const float LookaroundSpeedReduction = 0.002f;
-
-    private float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
+    [ExportGroup("Shooting")]
+    [Export]
+    public PackedScene Bullet;
 
     private Vector2 _viewPoint = new(0.0f, 0.0f);
 
-    private CameraController _cameraController;
+    public Vector2 ForwardVector => Vector2.Down.Rotated(_viewPoint.X);
 
+    public Vector2 SidewaysVector
+    {
+        get
+        {
+            var fw = ForwardVector;
+            return new Vector2(fw.Y, -fw.X); // using rotation matrix to rotate by 90
+        }
+    }
+
+    private const float LookaroundSpeedReduction = 0.002f;
+    private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
+    private bool _isControlling;
+    
+    private CameraController _cameraController;
     private Node _smoothing;
+    private RayCast3D _aimCast;
+
+    private Vector3 AimVector => -_aimCast.GlobalTransform.Basis.Z;
 
     public override void _Ready()
     {
         _cameraController = GetNode<CameraController>("VisualSmoothing/CameraController");
         _smoothing = GetNode("VisualSmoothing");
+        _aimCast = GetNode<RayCast3D>("%AimCast");
+        
         StartControlling();
-    }
-
-    public void StartControlling()
-    {
-        Input.MouseMode = Input.MouseModeEnum.Captured;
-        _smoothing.Call("set_enabled", true);
-        _smoothing.Call("teleport");
-    }
-    
-    public void StopControlling()
-    {
-        Input.MouseMode = Input.MouseModeEnum.Visible;
-        _smoothing.Call("set_enabled", false);
     }
 
     public override void _Input(InputEvent @event)
     {
-        if (_cameraController != null && Input.MouseMode == Input.MouseModeEnum.Captured && @event is InputEventMouseMotion mouseMotion)
+        if (_cameraController != null && Input.MouseMode == Input.MouseModeEnum.Captured &&
+            @event is InputEventMouseMotion mouseMotion)
         {
             _viewPoint.X += mouseMotion.Relative.X * LookaroundSpeed * LookaroundSpeedReduction;
             _viewPoint.Y += mouseMotion.Relative.Y * LookaroundSpeed * LookaroundSpeedReduction;
@@ -85,13 +93,18 @@ public partial class PlayerCharacter : CharacterBody3D
 
             _cameraController.RotateTo(_viewPoint);
         }
+        
+        if (@event.IsActionPressed("shoot"))
+        {
+            ShootDebugLaser();
+        }
     }
 
     public override void _Process(double delta)
     {
         var graph = DebugDraw2D.GetGraph("speed") ?? DebugDraw2D.CreateGraph("speed");
         graph.BufferSize = 1000;
-        DebugDraw2D.GraphUpdateData("speed", new Vector2(Velocity.X, Velocity.Z).Length());
+        DebugDraw2D.GraphUpdateData("speed", Velocity.Length());
     }
 
     public override void _PhysicsProcess(double delta)
@@ -100,18 +113,34 @@ public partial class PlayerCharacter : CharacterBody3D
         MoveAndSlide();
     }
 
+    public void StartControlling()
+    {
+        Input.MouseMode = Input.MouseModeEnum.Captured;
+        _isControlling = true;
+    }
+
+    public void StopControlling()
+    {
+        Input.MouseMode = Input.MouseModeEnum.Visible;
+        _isControlling = false;
+    }
+
+    public void ShootDebugLaser()
+    {
+        var bullet = Bullet.Instantiate<Bullet>();
+        AddChild(bullet);
+        bullet.Shoot(_aimCast.GlobalPosition, AimVector);
+        GD.Print("pew");
+    }
+
     private Vector3 Movement(double delta, Vector3 velocity)
     {
         // GD.Print(-_camera.Transform.Basis.Z);
         var inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
 
-        // based on camera
-        var forwardVector = Vector2.Down.Rotated(_viewPoint.X);
-        var sidewaysVector = new Vector2(forwardVector.Y, -forwardVector.X); // using rotation matrix to rotate by 90
-
         // direction with view and input
-        var forwardDirection = forwardVector * inputDir.Y;
-        var sidewaysDirection = sidewaysVector * inputDir.X;
+        var forwardDirection = ForwardVector * inputDir.Y;
+        var sidewaysDirection = SidewaysVector * inputDir.X;
 
         // final direction vector by adding horizontal and vertical together
         var direction = (forwardDirection + sidewaysDirection).Normalized();
@@ -121,7 +150,7 @@ public partial class PlayerCharacter : CharacterBody3D
                         sidewaysDirection.Normalized() * AirStrafeControl;
         }
 
-        DebugDraw3D.DrawRay(Position, new Vector3(direction.X, 0, direction.Y), 1, Colors.DarkCyan);
+        // DebugDraw3D.DrawRay(Position, new Vector3(direction.X, 0, direction.Y), 1, Colors.DarkCyan);
 
         velocity.X = Acceleration(delta, velocity.X, direction.X);
         velocity.Z = Acceleration(delta, velocity.Z, direction.Y);
@@ -138,7 +167,7 @@ public partial class PlayerCharacter : CharacterBody3D
         // we are still moving no need to decelerate
         if (!Mathf.IsZeroApprox(direction.Length()))
         {
-            DebugDraw3D.DrawRay(Position, velocity, velocity.Length(), Colors.Blue);
+            // DebugDraw3D.DrawRay(Position, velocity, velocity.Length(), Colors.Blue);
             return velocity;
         }
 
@@ -151,7 +180,7 @@ public partial class PlayerCharacter : CharacterBody3D
         velocity.X = Mathf.MoveToward(velocity.X, 0, friction * (float)delta * Math.Abs(movementDirection.X));
         velocity.Z = Mathf.MoveToward(velocity.Z, 0, friction * (float)delta * Math.Abs(movementDirection.Y));
 
-        DebugDraw3D.DrawRay(Position, velocity, velocity.Length(), Colors.Red);
+        // DebugDraw3D.DrawRay(Position, velocity, velocity.Length(), Colors.Red);
 
         return velocity;
     }

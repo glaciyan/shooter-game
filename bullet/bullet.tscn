@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://ckqpg015s4kos"]
+
+[ext_resource type="Script" path="res://bullet/Bullet.cs" id="1_wloxt"]
+
+[node name="Bullet" type="Node3D"]
+script = ExtResource("1_wloxt")
+CollisionMask = 1

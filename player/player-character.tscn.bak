@@ -1,0 +1,55 @@
+[gd_scene load_steps=7 format=3 uid="uid://b3gr35vagtxy8"]
+
+[ext_resource type="Script" path="res://player/PlayerCharacter.cs" id="1_ri2a1"]
+[ext_resource type="Script" path="res://addons/smoothing/smoothing.gd" id="2_0cvko"]
+[ext_resource type="Script" path="res://player/CameraController.cs" id="2_gqrom"]
+[ext_resource type="Script" path="res://player/WeaponViewport.gd" id="2_huxq7"]
+[ext_resource type="PackedScene" uid="uid://ehtkg3xh4omo" path="res://weapon/hands.tscn" id="3_ya836"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_e01gv"]
+radius = 0.4
+height = 1.8
+
+[node name="PlayerCharacter" type="CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("1_ri2a1")
+
+[node name="HandsDisplay" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 1
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="HandsDisplay"]
+layout_mode = 0
+offset_right = 512.0
+offset_bottom = 512.0
+
+[node name="SubViewport" type="SubViewport" parent="HandsDisplay/SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+canvas_cull_mask = 4293918722
+render_target_update_mode = 4
+script = ExtResource("2_huxq7")
+
+[node name="HandsCamera3D" type="Camera3D" parent="HandsDisplay/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+cull_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_e01gv")
+
+[node name="VisualSmoothing" type="Node3D" parent="."]
+script = ExtResource("2_0cvko")
+flags = 15
+
+[node name="CameraController" type="Node3D" parent="VisualSmoothing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+script = ExtResource("2_gqrom")
+metadata/_edit_group_ = true
+
+[node name="Camera3D" type="Camera3D" parent="VisualSmoothing/CameraController"]
+cull_mask = 1048573
+current = true
+
+[node name="HandsRemoteTransform3D" type="RemoteTransform3D" parent="VisualSmoothing/CameraController/Camera3D"]
+remote_path = NodePath("../../../../HandsDisplay/SubViewportContainer/SubViewport/HandsCamera3D")
