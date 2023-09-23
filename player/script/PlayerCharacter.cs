@@ -66,7 +66,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private const float LookaroundSpeedReduction = 0.002f;
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private bool _isControlling;
-    
+
     private CameraController _cameraController;
     private Node _smoothing;
     private RayCast3D _aimCast;
@@ -78,7 +78,7 @@ public partial class PlayerCharacter : CharacterBody3D
         _cameraController = GetNode<CameraController>("VisualSmoothing/CameraController");
         _smoothing = GetNode("VisualSmoothing");
         _aimCast = GetNode<RayCast3D>("%AimCast");
-        
+
         StartControlling();
     }
 
@@ -93,7 +93,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
             _cameraController.RotateTo(_viewPoint);
         }
-        
+
         if (@event.IsActionPressed("shoot"))
         {
             ShootDebugLaser();
@@ -127,7 +127,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public void ShootDebugLaser()
     {
-        var bullet = Bullet.Instantiate<Bullet>();
+        var bullet = Bullet.Instantiate<bullet.Bullet>();
         AddChild(bullet);
         bullet.Shoot(_aimCast.GlobalPosition, AimVector);
         GD.Print("pew");

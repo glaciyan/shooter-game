@@ -1,6 +1,6 @@
 using Godot;
 
-namespace shootergame;
+namespace shootergame.bullet;
 
 public partial class Bullet : Node3D
 {
