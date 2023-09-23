@@ -55,10 +55,45 @@ use_collision = true
 size = Vector3(1, 2, 1)
 material = SubResource("StandardMaterial3D_clqsw")
 
+[node name="CSGBox3D5" type="CSGBox3D" parent="WorldGeometry"]
+transform = Transform3D(0.811462, 0.584405, 0, -0.584405, 0.811462, 0, 0, 0, 1, 2.77603, -0.299012, 2.56573)
+use_collision = true
+size = Vector3(1, 4.67055, 1)
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="WorldGeometry"]
+transform = Transform3D(0.643456, 0.765483, 0, -0.765483, 0.643456, 0, 0, 0, 1, 2.77603, -0.617072, 4.1402)
+use_collision = true
+size = Vector3(1, 5.72278, 1)
+material = SubResource("StandardMaterial3D_clqsw")
+
 [node name="CSGBox3D3" type="CSGBox3D" parent="WorldGeometry"]
 transform = Transform3D(0.764078, 0, 0.645124, 0, 1, 0, -0.645124, 0, 0.764078, 2.97235, -0.268618, -0.227831)
 use_collision = true
 material = SubResource("StandardMaterial3D_r8oc7")
 
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="WorldGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.87675, -1.02444, 6.26277)
+use_collision = true
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
 [node name="PlayerCharacter" parent="." instance=ExtResource("1_oa3qg")]
-transform = Transform3D(0.99995, 0.0100006, 0, -0.0100006, 0.99995, 0, 0, 0, 1, 0, 0.82965, 0)
+transform = Transform3D(0.99995, 0.0100006, 0, -0.0100006, 0.99995, 0, 0, 0, 1, 0, 0.146134, 0)

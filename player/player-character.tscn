@@ -1,21 +1,27 @@
-[gd_scene load_steps=4 format=3 uid="uid://b3gr35vagtxy8"]
+[gd_scene load_steps=5 format=3 uid="uid://b3gr35vagtxy8"]
 
 [ext_resource type="Script" path="res://player/PlayerCharacter.cs" id="1_ri2a1"]
+[ext_resource type="Script" path="res://addons/smoothing/smoothing.gd" id="2_0cvko"]
 [ext_resource type="Script" path="res://player/CameraController.cs" id="2_gqrom"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_x6c7s"]
-size = Vector3(0.6, 1.8, 0.6)
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_e01gv"]
+radius = 0.4
+height = 1.8
 
 [node name="PlayerCharacter" type="CharacterBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 script = ExtResource("1_ri2a1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-shape = SubResource("BoxShape3D_x6c7s")
+shape = SubResource("CapsuleShape3D_e01gv")
 
-[node name="CameraController" type="Node3D" parent="."]
+[node name="VisualSmoothing" type="Node3D" parent="."]
+script = ExtResource("2_0cvko")
+flags = 15
+
+[node name="CameraController" type="Node3D" parent="VisualSmoothing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 script = ExtResource("2_gqrom")
 metadata/_edit_group_ = true
 
-[node name="Camera3D" type="Camera3D" parent="CameraController"]
+[node name="Camera3D" type="Camera3D" parent="VisualSmoothing/CameraController"]
