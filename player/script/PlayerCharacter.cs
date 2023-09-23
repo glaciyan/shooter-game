@@ -68,7 +68,6 @@ public partial class PlayerCharacter : CharacterBody3D
     private bool _isControlling;
 
     private CameraController _cameraController;
-    private Node _smoothing;
     private RayCast3D _aimCast;
 
     private Vector3 AimVector => -_aimCast.GlobalTransform.Basis.Z;
@@ -76,7 +75,6 @@ public partial class PlayerCharacter : CharacterBody3D
     public override void _Ready()
     {
         _cameraController = GetNode<CameraController>("VisualSmoothing/CameraController");
-        _smoothing = GetNode("VisualSmoothing");
         _aimCast = GetNode<RayCast3D>("%AimCast");
 
         StartControlling();
