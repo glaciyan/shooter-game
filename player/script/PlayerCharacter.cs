@@ -1,6 +1,8 @@
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Godot;
+using shootergame.bullet;
 using Vector2 = Godot.Vector2;
 using Vector3 = Godot.Vector3;
 
@@ -68,14 +70,13 @@ public partial class PlayerCharacter : CharacterBody3D
     private bool _isControlling;
 
     private CameraController _cameraController;
-    private RayCast3D _aimCast;
 
-    private Vector3 AimVector => -_aimCast.GlobalTransform.Basis.Z;
+    private Vector3 AimVector => Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
+    private Vector3 AimPosition => _cameraController.GlobalPosition;
 
     public override void _Ready()
     {
         _cameraController = GetNode<CameraController>("VisualSmoothing/CameraController");
-        _aimCast = GetNode<RayCast3D>("%AimCast");
 
         StartControlling();
     }
@@ -135,9 +136,9 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private void ShootDebugLaser()
     {
-        var bullet = Bullet.Instantiate<bullet.Bullet>();
+        var bullet = Bullet.Instantiate<Bullet>();
         AddChild(bullet);
-        bullet.Shoot(_aimCast.GlobalPosition, AimVector);
+        bullet.Shoot(AimPosition, AimVector);
         GD.Print("pew");
     }
 
