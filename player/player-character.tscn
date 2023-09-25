@@ -8,8 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://nqyu67hkught" path="res://assets/crosshair.png" id="5_y8etn"]
 [ext_resource type="Script" path="res://player/script/WeaponViewport.gd" id="6_ie6jj"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_s0hk4"]
-size = Vector3(0.8, 2, 0.8)
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_8vhxr"]
+height = 1.8
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_s0kbu"]
 radius = 0.1
@@ -22,7 +22,7 @@ script = ExtResource("1_e76sx")
 Bullet = ExtResource("2_bljs8")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-shape = SubResource("BoxShape3D_s0hk4")
+shape = SubResource("CylinderShape3D_8vhxr")
 
 [node name="VisualSmoothing" type="Node3D" parent="."]
 script = ExtResource("2_0cvko")

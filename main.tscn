@@ -105,4 +105,4 @@ use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
 [node name="PlayerCharacter" parent="." instance=ExtResource("1_bfuh2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.153076, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.43022, 0)

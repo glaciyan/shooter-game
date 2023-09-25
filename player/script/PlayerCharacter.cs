@@ -108,14 +108,14 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
-        for (var i = 0; i < GetSlideCollisionCount(); i++)
-        {
-            var collision = GetSlideCollision(i);
-            GD.Print(collision.GetNormal().Cross(Vector3.Down).Length());
-            
-            DebugDraw3D.DrawPoints(new []{collision.GetPosition()}, 0.2f, Colors.Red, 0.1f);
-            DebugDraw3D.DrawArrowRay(collision.GetPosition(), collision.GetNormal(), 0.5f, Colors.DarkGreen, 0.5F, false, 0.1F);
-        }
+        // for (var i = 0; i < GetSlideCollisionCount(); i++)
+        // {
+        //     var collision = GetSlideCollision(i);
+        //     GD.Print(collision.GetNormal().Cross(Vector3.Down).Length());
+        //     
+        //     DebugDraw3D.DrawPoints(new []{collision.GetPosition()}, 0.2f, Colors.Red, 0.1f);
+        //     DebugDraw3D.DrawArrowRay(collision.GetPosition(), collision.GetNormal(), 0.5f, Colors.DarkGreen, 0.5F, false, 0.1F);
+        // }
         
         Velocity = Movement(delta, Gravity(delta, Jump(Velocity)));
         MoveAndSlide();

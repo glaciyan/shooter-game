@@ -72,3 +72,7 @@ shoot={
 3d_physics/layer_1="world"
 3d_physics/layer_2="player"
 3d_physics/layer_6="only_player"
+
+[physics]
+
+3d/physics_engine="JoltPhysics3D"
