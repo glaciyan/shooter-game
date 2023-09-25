@@ -52,9 +52,9 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private Vector2 _viewPoint = new(0.0f, 0.0f);
 
-    public Vector2 ForwardVector => Vector2.Down.Rotated(_viewPoint.X);
+    private Vector2 ForwardVector => Vector2.Down.Rotated(_viewPoint.X);
 
-    public Vector2 SidewaysVector
+    private Vector2 SidewaysVector
     {
         get
         {
@@ -103,27 +103,37 @@ public partial class PlayerCharacter : CharacterBody3D
         var graph = DebugDraw2D.GetGraph("speed") ?? DebugDraw2D.CreateGraph("speed");
         graph.BufferSize = 1000;
         DebugDraw2D.GraphUpdateData("speed", Velocity.Length());
+        DebugDraw2D.SetText("OnFloor", IsOnFloor());
     }
 
     public override void _PhysicsProcess(double delta)
     {
+        for (var i = 0; i < GetSlideCollisionCount(); i++)
+        {
+            var collision = GetSlideCollision(i);
+            GD.Print(collision.GetNormal().Cross(Vector3.Down).Length());
+            
+            DebugDraw3D.DrawPoints(new []{collision.GetPosition()}, 0.2f, Colors.Red, 0.1f);
+            DebugDraw3D.DrawArrowRay(collision.GetPosition(), collision.GetNormal(), 0.5f, Colors.DarkGreen, 0.5F, false, 0.1F);
+        }
+        
         Velocity = Movement(delta, Gravity(delta, Jump(Velocity)));
         MoveAndSlide();
     }
 
-    public void StartControlling()
+    private void StartControlling()
     {
         Input.MouseMode = Input.MouseModeEnum.Captured;
         _isControlling = true;
     }
 
-    public void StopControlling()
+    private void StopControlling()
     {
         Input.MouseMode = Input.MouseModeEnum.Visible;
         _isControlling = false;
     }
 
-    public void ShootDebugLaser()
+    private void ShootDebugLaser()
     {
         var bullet = Bullet.Instantiate<bullet.Bullet>();
         AddChild(bullet);
