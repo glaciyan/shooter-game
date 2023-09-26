@@ -1,10 +1,7 @@
 using System;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using Godot;
 using shootergame.bullet;
-using Vector2 = Godot.Vector2;
-using Vector3 = Godot.Vector3;
 
 namespace shootergame.player.script;
 
@@ -69,14 +66,22 @@ public partial class PlayerCharacter : CharacterBody3D
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private bool _isControlling;
 
-    private CameraController _cameraController;
+    private Vector3 AimVector =>
+        Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
 
-    private Vector3 AimVector => Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
     private Vector3 AimPosition => _cameraController.GlobalPosition;
+
+    private CameraController _cameraController;
+    private CollisionShape3D _collisionShape;
+    private ShapeCast3D _shapeCast = new();
 
     public override void _Ready()
     {
         _cameraController = GetNode<CameraController>("VisualSmoothing/CameraController");
+        _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
+
+        _shapeCast.Shape = _collisionShape.Shape;
+        AddChild(_shapeCast);
 
         StartControlling();
     }
@@ -107,19 +112,126 @@ public partial class PlayerCharacter : CharacterBody3D
         DebugDraw2D.SetText("OnFloor", IsOnFloor());
     }
 
+    private bool _shapeCastValid;
+
     public override void _PhysicsProcess(double delta)
     {
-        // for (var i = 0; i < GetSlideCollisionCount(); i++)
-        // {
-        //     var collision = GetSlideCollision(i);
-        //     GD.Print(collision.GetNormal().Cross(Vector3.Down).Length());
-        //     
-        //     DebugDraw3D.DrawPoints(new []{collision.GetPosition()}, 0.2f, Colors.Red, 0.1f);
-        //     DebugDraw3D.DrawArrowRay(collision.GetPosition(), collision.GetNormal(), 0.5f, Colors.DarkGreen, 0.5F, false, 0.1F);
-        // }
-        
         Velocity = Movement(delta, Gravity(delta, Jump(Velocity)));
-        MoveAndSlide();
+
+        if (!StepUp(delta)) MoveAndSlide();
+    }
+
+    private bool StepUp(double delta)
+    {
+        if (!IsOnFloor()) return false;
+
+        const float stepHeight = 0.5f; // TODO temp
+        if (_shapeCastValid || (_shapeCastValid = IsInstanceValid(_shapeCast)))
+        {
+            var v = Velocity * (float)delta;
+
+
+            // initialize 
+            _shapeCast.Shape = _collisionShape.Shape;
+            _shapeCast.CollisionMask = CollisionMask;
+            _shapeCast.Position = _collisionShape.Position;
+            _shapeCast.MaxResults = 1;
+            _shapeCast.TargetPosition = Vector3.Zero;
+
+            var height = new Vector3(0, stepHeight, 0);
+            var movement = new Vector3(v.X, 0, v.Z);
+            var checkStairHeight = new Vector3(0, -stepHeight, 0);
+
+            if (ShootShapeCast(_collisionShape.Position, height) && _shapeCast.GetCollisionCount() != 0)
+            {
+                GD.Print("head adjust");
+                DebugDraw3D.DrawPoints(new[] { _shapeCast.GetCollisionPoint(0) }, 0.05f, Colors.Red, 0.2f);
+                // height.Y = _shapeCast.GetCollisionPoint(0).Y - 1.75f / 2;
+            }
+
+
+            if (ShootShapeCast(height, movement) && _shapeCast.GetCollisionCount() != 0)
+            {
+                GD.Print("fwd stop");
+                return false;
+            }
+
+            if (!ShootShapeCast(height + movement, -height) && _shapeCast.GetCollisionCount() == 0)
+            {
+                GD.Print("No stair");
+                return false;
+            }
+            
+            GD.Print("stepping");
+
+            var gPos = GlobalPosition;
+            gPos.Y = _shapeCast.GetCollisionPoint(0).Y;
+            GlobalPosition = gPos;
+
+            Position += movement;
+
+            return true;
+
+
+            // _shapeCast.Position = _collisionShape.Position + height + movement;
+            // // TODO check for normal to prevent going up too steep stairs
+            // if (!ShootShapeCast(checkStairHeight) && _shapeCast.GetCollisionCount() == 0)
+            // {
+            //     // GD.Print("No stair");
+            //     return false;
+            // }
+            //
+            // DebugDraw3D.DrawPoints(new[] { _shapeCast.GetCollisionPoint(0) }, 0.05f, Colors.Red, 0.2f);
+            //
+            // var collY = _shapeCast.GetCollisionPoint(0).Y;
+            //
+            // // var goalY = collY + ((BoxShape3D)_collisionShape.Shape).Size.Y / 2;
+            // var globalY = collY + 1.75f / 2; // TODO temp value 1.75
+            // var localY = globalY - _collisionShape.GlobalPosition.Y;
+            //
+            // _shapeCast.Position = Vector3.Zero;
+            // if (ShootShapeCast(Vector3.Up * localY) && _shapeCast.GetCollisionCount() != 0)
+            // {
+            //     GD.Print("height block");
+            //     return false;
+            // }
+            //
+            // _shapeCast.Position += Vector3.Up * localY;
+            // if (ShootShapeCast(movement) && _shapeCast.GetCollisionCount() != 0)
+            // {
+            //     DebugDraw3D.DrawPoints(new[] { _shapeCast.GetCollisionPoint(0) }, 0.05f, Colors.Green, 0.2f);
+            //     GD.Print("fwd block");
+            //     return false;
+            // }
+            //
+            // movement.Y = localY;
+            // Position += movement;
+
+            //
+            // // if (ShootShapeCast(height) || ShootShapeCast(movement) || !ShootShapeCast(checkStairHeight) ||
+            // //     _shapeCast.GetCollisionCount() == 0)
+            // // {
+            // //     return false;
+            // // }
+            //
+            // // step is detected
+            // GD.Print(_shapeCast.GetCollisionNormal(0).Cross(Vector3.Up).Length());
+            // DebugDraw3D.DrawPoints(new[] { point }, 0.05f, Colors.Red, 0.2f);
+            //
+
+            // return true;
+        }
+
+        return false;
+    }
+
+    private bool ShootShapeCast(Vector3 from, Vector3 target)
+    {
+        _shapeCast.Position = from;
+        _shapeCast.TargetPosition = target;
+        _shapeCast.ForceShapecastUpdate();
+
+        return _shapeCast.IsColliding();
     }
 
     private void StartControlling()
