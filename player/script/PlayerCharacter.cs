@@ -287,7 +287,9 @@ public partial class PlayerCharacter : CharacterBody3D
         contact = ShootShapeCastGlobal(newPosition, down);
         if (!contact.IsColliding())
         {
+#if STAIR_DEBUG
             GD.Print("WalkStairs: no floor found");
+#endif
             return false; // no floor found
         }
 
