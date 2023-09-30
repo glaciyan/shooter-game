@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://c6356ubeoiydj"]
+[gd_scene load_steps=10 format=3 uid="uid://c6356ubeoiydj"]
 
 [ext_resource type="PackedScene" uid="uid://b3gr35vagtxy8" path="res://player/player-character.tscn" id="1_bfuh2"]
 [ext_resource type="Script" path="res://main.gd" id="1_ibyna"]
@@ -26,6 +26,8 @@ albedo_color = Color(0.176471, 0.203922, 0.4, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r8oc7"]
 albedo_color = Color(0.913725, 0.203922, 0.4, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ku4yw"]
 
 [node name="main" type="Node3D"]
 script = ExtResource("1_ibyna")
@@ -110,9 +112,10 @@ use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
 [node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.48263, 0.650495, 7.3384)
+transform = Transform3D(0.860662, 0, 2.18119, 0, 1, 0, -0.509177, 0, 3.68687, -4.48263, 0.650495, 6.39196)
 use_collision = true
 size = Vector3(1, 0.3, 1)
+material = SubResource("StandardMaterial3D_ku4yw")
 
 [node name="PlayerCharacter" parent="." instance=ExtResource("1_bfuh2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.72214, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.53042, 1.72673, 10.6762)

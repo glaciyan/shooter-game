@@ -1,4 +1,8 @@
+#define STAIR_DEBUG
+
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Godot;
 using shootergame.bullet;
@@ -65,6 +69,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private const float LookaroundSpeedReduction = 0.002f;
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private bool _isControlling;
+    private const float FloorMaxAngleThreshold = 0.01f;
 
     private Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
@@ -81,6 +86,7 @@ public partial class PlayerCharacter : CharacterBody3D
         _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
 
         _shapeCast.Shape = _collisionShape.Shape;
+        _shapeCast.DebugShapeCustomColor = new Color(Colors.Aqua);
         AddChild(_shapeCast);
 
         StartControlling();
@@ -110,128 +116,315 @@ public partial class PlayerCharacter : CharacterBody3D
         graph.BufferSize = 1000;
         DebugDraw2D.GraphUpdateData("speed", Velocity.Length());
         DebugDraw2D.SetText("OnFloor", IsOnFloor());
+        DebugDraw2D.SetText("OnWall", IsOnWall());
+        DebugDraw2D.SetText("IsSupported", IsSupported());
     }
 
     private bool _shapeCastValid;
 
     public override void _PhysicsProcess(double delta)
     {
+        var oldPosition = GlobalPosition;
+
         Velocity = Movement(delta, Gravity(delta, Jump(Velocity)));
 
-        if (!StepUp(delta)) MoveAndSlide();
+        var desiredVelocity = Velocity;
+
+        MoveAndSlide();
+
+        // TODO stick to floor
+
+
+        // TODO temp move to config 
+        var walkStairsStepUp = new Vector3(0, 0.4f, 0);
+        const float walkStairsStepForward = 0.02f;
+        const float walkStairsStopForwardTest = 0.15f;
+        var walkStairsCosAngleForwardContact = Mathf.Cos(Mathf.DegToRad(75.0f));
+        var walkStairsStepDownExtra = Vector3.Zero;
+
+        // Walk stairs
+        // ported from https://github.com/jrouwe/JoltPhysics/blob/1b21180c67930f5669750a7912c55d90407586ee/Jolt/Physics/Character/CharacterVirtual.cpp#L1343
+        if (!walkStairsStepUp.IsZeroApprox())
+        {
+            // how much we wanted to move horizontally
+            var desiredHorizontalStep = desiredVelocity * (float)delta;
+            // set "up" to 0
+            desiredHorizontalStep -= desiredHorizontalStep.Dot(Vector3.Up) * Vector3.Up;
+            if (desiredHorizontalStep.Length() > 0.0f)
+            {
+                // how much did we actually move horizontally
+                var achievedHorizontalStep = GlobalPosition - oldPosition;
+                achievedHorizontalStep -= achievedHorizontalStep.Dot(Vector3.Up) * Vector3.Up;
+                var stepForwardNormalized = desiredHorizontalStep.Normalized();
+                achievedHorizontalStep = Mathf.Max(0.0f, achievedHorizontalStep.Dot(stepForwardNormalized)) *
+                                         stepForwardNormalized;
+
+                if (achievedHorizontalStep.Length() + 1.0e-4f < desiredHorizontalStep.Length() &&
+                    CanWalkStairs(desiredVelocity))
+                {
+                    var stepForward = stepForwardNormalized * Mathf.Max(walkStairsStepForward,
+                        desiredHorizontalStep.Length() - achievedHorizontalStep.Length());
+
+                    // Calculate how far to scan ahead for a floor. This is only used in
+                    // case the floor normal at step_forward is too steep. In that case an
+                    // additional check will be performed at this distance to check if that
+                    // normal is not too steep. Start with the ground normal in the
+                    // horizontal plane and normalizing it
+                    var floorNormal = Vector3.Zero;
+                    var foundNormal = false;
+                    var collision = GetLastSlideCollision();
+                    if (collision != null && IsOnFloor())
+                    {
+                        for (var i = 0; i < collision.GetCollisionCount(); i++)
+                        {
+                            if (collision.GetNormal(i).IsZeroApprox()) continue;
+                            floorNormal = collision.GetNormal(i);
+                            foundNormal = true;
+                            break;
+                        }
+                    }
+
+                    var stepForwardTest = foundNormal ? -floorNormal : -GetFloorNormal();
+#if STAIR_DEBUG
+                    DebugDraw3D.DrawArrowRay(GlobalPosition + Vector3.Up, stepForwardTest, 1.0f, Colors.Blue, 0.5f,
+                        false, 0.5f);
+#endif
+                    stepForwardTest -= stepForwardTest.Dot(UpDirection) * UpDirection;
+                    stepForwardTest = stepForwardTest.NormalizedOr(stepForwardNormalized);
+
+                    if (stepForwardTest.Dot(stepForwardNormalized) < walkStairsCosAngleForwardContact)
+                    {
+                        stepForwardTest = stepForwardNormalized;
+                    }
+
+                    stepForwardTest *= walkStairsStopForwardTest;
+
+                    WalkStairs((float)delta, walkStairsStepUp, stepForward, stepForwardTest, walkStairsStepDownExtra);
+                }
+            }
+        }
     }
 
-    private bool StepUp(double delta)
+    private bool WalkStairs(float delta, Vector3 stepUp, Vector3 stepForward, Vector3 stepForwardTest,
+        Vector3 stepDownExtra)
     {
-        if (!IsOnFloor()) return false;
+        var up = stepUp;
 
-        const float stepHeight = 0.5f; // TODO temp
-        if (_shapeCastValid || (_shapeCastValid = IsInstanceValid(_shapeCast)))
+        // Move up
+        var contact = ShootShapeCastGlobal(GlobalPosition, up);
+        if (contact.IsColliding())
         {
-            var v = Velocity * (float)delta;
-
-
-            // initialize 
-            _shapeCast.Shape = _collisionShape.Shape;
-            _shapeCast.CollisionMask = CollisionMask;
-            _shapeCast.Position = _collisionShape.Position;
-            _shapeCast.MaxResults = 1;
-            _shapeCast.TargetPosition = Vector3.Zero;
-
-            var height = new Vector3(0, stepHeight, 0);
-            var movement = new Vector3(v.X, 0, v.Z);
-            var checkStairHeight = new Vector3(0, -stepHeight, 0);
-
-            if (ShootShapeCast(_collisionShape.Position, height) && _shapeCast.GetCollisionCount() != 0)
+            if (contact.GetClosestCollisionSafeFraction() < 1.0e-6f)
             {
-                GD.Print("head adjust");
-                DebugDraw3D.DrawPoints(new[] { _shapeCast.GetCollisionPoint(0) }, 0.05f, Colors.Red, 0.2f);
-                // height.Y = _shapeCast.GetCollisionPoint(0).Y - 1.75f / 2;
-            }
-
-
-            if (ShootShapeCast(height, movement) && _shapeCast.GetCollisionCount() != 0)
-            {
-                GD.Print("fwd stop");
+                GD.Print("Walk Stairs: no up movement");
                 return false;
             }
 
-            if (!ShootShapeCast(height + movement, -height) && _shapeCast.GetCollisionCount() == 0)
-            {
-                GD.Print("No stair");
-                return false;
-            }
-            
-            GD.Print("stepping");
-
-            var gPos = GlobalPosition;
-            gPos.Y = _shapeCast.GetCollisionPoint(0).Y;
-            GlobalPosition = gPos;
-
-            Position += movement;
-
-            return true;
-
-
-            // _shapeCast.Position = _collisionShape.Position + height + movement;
-            // // TODO check for normal to prevent going up too steep stairs
-            // if (!ShootShapeCast(checkStairHeight) && _shapeCast.GetCollisionCount() == 0)
-            // {
-            //     // GD.Print("No stair");
-            //     return false;
-            // }
-            //
-            // DebugDraw3D.DrawPoints(new[] { _shapeCast.GetCollisionPoint(0) }, 0.05f, Colors.Red, 0.2f);
-            //
-            // var collY = _shapeCast.GetCollisionPoint(0).Y;
-            //
-            // // var goalY = collY + ((BoxShape3D)_collisionShape.Shape).Size.Y / 2;
-            // var globalY = collY + 1.75f / 2; // TODO temp value 1.75
-            // var localY = globalY - _collisionShape.GlobalPosition.Y;
-            //
-            // _shapeCast.Position = Vector3.Zero;
-            // if (ShootShapeCast(Vector3.Up * localY) && _shapeCast.GetCollisionCount() != 0)
-            // {
-            //     GD.Print("height block");
-            //     return false;
-            // }
-            //
-            // _shapeCast.Position += Vector3.Up * localY;
-            // if (ShootShapeCast(movement) && _shapeCast.GetCollisionCount() != 0)
-            // {
-            //     DebugDraw3D.DrawPoints(new[] { _shapeCast.GetCollisionPoint(0) }, 0.05f, Colors.Green, 0.2f);
-            //     GD.Print("fwd block");
-            //     return false;
-            // }
-            //
-            // movement.Y = localY;
-            // Position += movement;
-
-            //
-            // // if (ShootShapeCast(height) || ShootShapeCast(movement) || !ShootShapeCast(checkStairHeight) ||
-            // //     _shapeCast.GetCollisionCount() == 0)
-            // // {
-            // //     return false;
-            // // }
-            //
-            // // step is detected
-            // GD.Print(_shapeCast.GetCollisionNormal(0).Cross(Vector3.Up).Length());
-            // DebugDraw3D.DrawPoints(new[] { point }, 0.05f, Colors.Red, 0.2f);
-            //
-
-            // return true;
+            up *= contact.GetClosestCollisionSafeFraction();
         }
 
-        return false;
+        var upPosition = GlobalPosition + up;
+
+#if STAIR_DEBUG
+        DebugDraw3D.DrawArrowLine(GlobalPosition, upPosition, Colors.White, 0.1f, false, 0.1f);
+#endif
+
+
+        // Collect normals of steep slopes that we would like to walk stairs on.
+        // We need to do this before calling MoveShape because it will update
+        // mActiveContacts. 
+        var characterVelocity = stepForward / delta;
+        var horizontalVelocity = characterVelocity - characterVelocity.Dot(UpDirection) * UpDirection;
+
+        var collision = GetLastSlideCollision();
+
+        var steepSlopeNormals = new List<Vector3>(collision.GetCollisionCount());
+        for (var i = 0; i < collision.GetCollisionCount(); i++)
+        {
+            if (collision.GetNormal(i).Dot(horizontalVelocity - collision.GetColliderVelocity(i)) < 0.0f
+                && IsSlopeTooSteep(collision.GetNormal(i)))
+            {
+                steepSlopeNormals.Add(collision.GetNormal(i));
+            }
+        }
+
+        if (steepSlopeNormals.Count == 0)
+        {
+            GD.Print("WalkStairs: no steep slopes");
+            return false; // no steep slopes
+        }
+
+
+        // Horizontal movement
+        var gp = GlobalPosition;
+        GlobalPosition = upPosition;
+        MoveAndCollide(characterVelocity * delta); // TODO this might break
+        var newPosition = GlobalPosition;
+        GlobalPosition = gp;
+
+        var horizontalMovement = newPosition - upPosition;
+        var horizontalMovementSq = horizontalMovement.LengthSquared();
+        if (horizontalMovementSq < 1.0e-8f)
+        {
+            GD.Print("WalkStairs: no movement");
+            return false; // no movement
+        }
+
+        // Check if we made any progress towards any of the steep slopes, if not we
+        // just slid along the slope so we need to cancel the stair walk or else we
+        // will move faster than we should as we've done normal movement first and
+        // then stair walk.
+        var maxDot = -0.05f * stepForward.Length();
+        var madeProgress = steepSlopeNormals.Any(normal => normal.Dot(horizontalMovement) < maxDot);
+        if (!madeProgress)
+        {
+            GD.Print("WalkStairs: no progress");
+            return false;
+        }
+
+#if STAIR_DEBUG
+        DebugDraw3D.DrawArrowLine(upPosition, newPosition, Colors.Red, 0.1f, false, 0.1f);
+#endif
+
+        // Move down towards the floor.
+        // Note that we travel the same amount down as we travelled up with the
+        // specified extra
+
+        var down = -up + stepDownExtra;
+        contact = ShootShapeCastGlobal(newPosition, down);
+        DebugDraw3D.DrawArrowLine(newPosition, newPosition + down, Colors.White, 0.1f, false, 0.1f);
+        if (!contact.IsColliding())
+        {
+            GD.Print("WalkStairs: no floor found");
+            return false; // no floor found
+        }
+
+#if STAIR_DEBUG
+        var debugPos = newPosition + contact.GetClosestCollisionSafeFraction() * down;
+        DebugDraw3D.DrawArrowLine(newPosition, debugPos, Colors.White, 0.1f, false, 0.1f);
+        DebugDraw3D.DrawArrowLine(contact.GetCollisionPoint(0),
+            contact.GetCollisionNormal(0) + contact.GetCollisionPoint(0), Colors.White, 0.1f, false, 0.1f);
+
+        DebugDraw3D.DrawBox(debugPos, new Vector3(0.4f, 1.8f, 0.4f), Colors.White, false, 0.1f);
+#endif
+
+        if (IsSlopeTooSteep(contact.GetCollisionNormal(0)))
+        {
+            if (stepForwardTest.IsZeroApprox())
+            {
+                GD.Print("WalkStairs: too steep and stepForwardTest is 0");
+                return false;
+            }
+
+            gp = GlobalPosition;
+            GlobalPosition = upPosition;
+            MoveAndCollide(stepForwardTest); // TODO value might be incorrect
+            var testPosition = GlobalPosition;
+            GlobalPosition = gp;
+
+            var testHorizontalPositionSq = (testPosition - upPosition).LengthSquared();
+            if (testHorizontalPositionSq <= horizontalMovementSq - 1.0e-8f)
+            {
+                GD.Print("WalkStairs: stepForwardTest: We didn't move any further than in the previous test");
+                return false;
+            }
+
+#if STAIR_DEBUG
+            DebugDraw3D.DrawArrowLine(upPosition, testPosition, Colors.Cyan, 0.1f, false, 0.1f);
+#endif
+
+            // Then sweep down
+            var testContact = ShootShapeCastGlobal(testPosition, down);
+            if (!testContact.IsColliding())
+            {
+                GD.Print("WalkStairs: sweep down failed");
+                return false;
+            }
+
+#if STAIR_DEBUG
+            var debugPos2 = testPosition + testContact.GetClosestCollisionSafeFraction() * down;
+            DebugDraw3D.DrawArrowLine(testPosition, debugPos2, Colors.White, 0.1f, false, 0.1f);
+            DebugDraw3D.DrawArrowLine(testContact.GetCollisionPoint(0),
+                testContact.GetCollisionNormal(0) + testContact.GetCollisionPoint(0), Colors.White, 0.1f, false, 0.1f);
+
+            DebugDraw3D.DrawBox(debugPos2, new Vector3(0.4f, 1.8f, 0.4f), Colors.White, false, 0.1f);
+#endif
+
+            if (IsSlopeTooSteep(testContact.GetCollisionNormal(0)))
+            {
+                GD.Print("WalkStairs: still too steep");
+                return false;
+            }
+        }
+
+        down *= contact.GetClosestCollisionSafeFraction();
+        newPosition += down;
+
+        GlobalPosition = newPosition;
+        MoveAndCollide(Vector3.Zero);
+
+        return true;
     }
 
-    private bool ShootShapeCast(Vector3 from, Vector3 target)
+    private Vector3 NormalizedOr(Vector3 value, Vector3 onZeroValue)
+    {
+        var lq = value.LengthSquared();
+
+        return lq == 0.0f ? onZeroValue : value / Mathf.Sqrt(lq);
+    }
+
+    private bool CanWalkStairs(Vector3 velocity)
+    {
+        // only walk stairs when we have supporting ground
+        if (!IsSupported())
+            return false;
+
+        var horizontalVelocity = velocity - velocity.Dot(UpDirection) * UpDirection;
+        // if we have enough horizontal vel and we are on a steep slope (simplified from jolt original code)
+        return !horizontalVelocity.IsZeroApprox() && IsOnWall();
+    }
+
+    private bool IsSlopeTooSteep(Vector3 normal)
+    {
+        var floorAngle = Mathf.Acos(normal.Dot(UpDirection));
+        return floorAngle >= FloorMaxAngle + FloorMaxAngleThreshold;
+    }
+
+    // The Player has ground underneath them
+    private bool IsSupported()
+    {
+        if (IsOnFloor()) return true;
+
+        var collision = GetLastSlideCollision();
+        if (collision == null) return false;
+
+        for (var i = 0; i < collision.GetCollisionCount(); i++)
+        {
+            var d = collision.GetNormal().Dot(UpDirection);
+            if (d < 1.0e-4f) return false; // we are not up against a wall
+        }
+
+        return true;
+    }
+
+    private ShapeCast3D ShootShapeCastGlobal(Vector3 from, Vector3 target)
+    {
+        _shapeCast.GlobalPosition = from;
+        _shapeCast.TargetPosition = target;
+        _shapeCast.ForceShapecastUpdate();
+        DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
+
+        return _shapeCast;
+    }
+
+    private ShapeCast3D ShootShapeCast(Vector3 from, Vector3 target)
     {
         _shapeCast.Position = from;
         _shapeCast.TargetPosition = target;
         _shapeCast.ForceShapecastUpdate();
+        DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
 
-        return _shapeCast.IsColliding();
+        return _shapeCast;
     }
 
     private void StartControlling()

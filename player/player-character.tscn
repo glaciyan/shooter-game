@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://b3gr35vagtxy8"]
+[gd_scene load_steps=13 format=3 uid="uid://b3gr35vagtxy8"]
 
 [ext_resource type="Script" path="res://player/script/PlayerCharacter.cs" id="1_e76sx"]
 [ext_resource type="Script" path="res://addons/smoothing/smoothing.gd" id="2_0cvko"]
@@ -8,10 +8,20 @@
 [ext_resource type="Texture2D" uid="uid://nqyu67hkught" path="res://assets/crosshair.png" id="5_y8etn"]
 [ext_resource type="Script" path="res://player/script/WeaponViewport.gd" id="6_ie6jj"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_xhkfk"]
-size = Vector3(0.625, 1.75, 0.625)
+[sub_resource type="BoxShape3D" id="BoxShape3D_a8cmu"]
+size = Vector3(0.8, 1.8, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pbjks"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_yjl3t"]
+material = SubResource("StandardMaterial3D_pbjks")
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j4gxj"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_s0kbu"]
+material = SubResource("StandardMaterial3D_j4gxj")
 radius = 0.1
 height = 0.3
 
@@ -22,7 +32,11 @@ script = ExtResource("1_e76sx")
 Bullet = ExtResource("2_bljs8")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-shape = SubResource("BoxShape3D_xhkfk")
+shape = SubResource("BoxShape3D_a8cmu")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+visible = false
+mesh = SubResource("CapsuleMesh_yjl3t")
 
 [node name="VisualSmoothing" type="Node3D" parent="."]
 script = ExtResource("2_0cvko")
@@ -40,13 +54,18 @@ current = true
 remote_path = NodePath("../../../../HandsDisplay/SubViewportContainer/SubViewport/HandsCamera3D")
 
 [node name="Crosshair" type="TextureRect" parent="VisualSmoothing/CameraController/MainCamera"]
-offset_right = 40.0
-offset_bottom = 40.0
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("5_y8etn")
 stretch_mode = 3
 script = ExtResource("5_nifvr")
 
 [node name="HandsDisplay" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 0
 mouse_filter = 1
@@ -60,7 +79,7 @@ offset_bottom = 512.0
 transparent_bg = true
 handle_input_locally = false
 canvas_cull_mask = 4293918722
-render_target_update_mode = 4
+render_target_update_mode = 0
 script = ExtResource("6_ie6jj")
 
 [node name="HandsCamera3D" type="Camera3D" parent="HandsDisplay/SubViewportContainer/SubViewport"]
