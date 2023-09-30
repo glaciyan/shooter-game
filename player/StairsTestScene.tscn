@@ -1,10 +1,11 @@
-[gd_scene load_steps=14 format=3 uid="uid://b5rmjajnlo22w"]
+[gd_scene load_steps=15 format=3 uid="uid://b5rmjajnlo22w"]
 
 [ext_resource type="Texture2D" uid="uid://8jjphj6non1s" path="res://art/blockmesh texture darkgray.png" id="1_x707m"]
 [ext_resource type="Texture2D" uid="uid://blejfycf2xpm7" path="res://art/blockmesh texture blue.png" id="2_x5sg2"]
 [ext_resource type="Texture2D" uid="uid://cuy43ijkbhula" path="res://art/blockmesh texture green.png" id="3_35qmt"]
 [ext_resource type="Texture2D" uid="uid://1ihienek4uv4" path="res://art/blockmesh texture purple.png" id="4_by77g"]
 [ext_resource type="Texture2D" uid="uid://cqtrnlqmmhffx" path="res://art/blockmesh texture red.png" id="5_73yqw"]
+[ext_resource type="PackedScene" uid="uid://b3gr35vagtxy8" path="res://player/player-character.tscn" id="6_t25lm"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kp031"]
 albedo_texture = ExtResource("1_x707m")
@@ -614,3 +615,6 @@ transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 
 pixel_size = 0.0025
 text = "glitch testing
 (slightly tighter)"
+
+[node name="PlayerCharacter" parent="." instance=ExtResource("6_t25lm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.24599, 2.56525)

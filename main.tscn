@@ -111,6 +111,52 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
+[node name="CSGCombiner3D2" type="CSGCombiner3D" parent="WorldGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.87675, 0.199057, 7.21426)
+use_collision = true
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D2"]
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGCombiner3D3" type="CSGCombiner3D" parent="WorldGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.87675, 0.199057, 8.07528)
+use_collision = true
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D3"]
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
 [node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry"]
 transform = Transform3D(0.860662, 0, 2.18119, 0, 1, 0, -0.509177, 0, 3.68687, -4.48263, 0.650495, 6.39196)
 use_collision = true

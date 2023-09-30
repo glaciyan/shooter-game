@@ -1,5 +1,3 @@
-#define STAIR_DEBUG
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -170,21 +168,7 @@ public partial class PlayerCharacter : CharacterBody3D
                     // additional check will be performed at this distance to check if that
                     // normal is not too steep. Start with the ground normal in the
                     // horizontal plane and normalizing it
-                    var floorNormal = Vector3.Zero;
-                    var foundNormal = false;
-                    var collision = GetLastSlideCollision();
-                    if (collision != null && IsOnFloor())
-                    {
-                        for (var i = 0; i < collision.GetCollisionCount(); i++)
-                        {
-                            if (collision.GetNormal(i).IsZeroApprox()) continue;
-                            floorNormal = collision.GetNormal(i);
-                            foundNormal = true;
-                            break;
-                        }
-                    }
-
-                    var stepForwardTest = foundNormal ? -floorNormal : -GetFloorNormal();
+                    var stepForwardTest = -GetFloorNormal();
 #if STAIR_DEBUG
                     DebugDraw3D.DrawArrowRay(GlobalPosition + Vector3.Up, stepForwardTest, 1.0f, Colors.Blue, 0.5f,
                         false, 0.5f);
@@ -216,7 +200,9 @@ public partial class PlayerCharacter : CharacterBody3D
         {
             if (contact.GetClosestCollisionSafeFraction() < 1.0e-6f)
             {
+#if STAIR_DEBUG
                 GD.Print("Walk Stairs: no up movement");
+#endif
                 return false;
             }
 
@@ -250,7 +236,9 @@ public partial class PlayerCharacter : CharacterBody3D
 
         if (steepSlopeNormals.Count == 0)
         {
+#if STAIR_DEBUG
             GD.Print("WalkStairs: no steep slopes");
+#endif
             return false; // no steep slopes
         }
 
@@ -266,7 +254,10 @@ public partial class PlayerCharacter : CharacterBody3D
         var horizontalMovementSq = horizontalMovement.LengthSquared();
         if (horizontalMovementSq < 1.0e-8f)
         {
+
+#if STAIR_DEBUG
             GD.Print("WalkStairs: no movement");
+#endif
             return false; // no movement
         }
 
@@ -278,7 +269,9 @@ public partial class PlayerCharacter : CharacterBody3D
         var madeProgress = steepSlopeNormals.Any(normal => normal.Dot(horizontalMovement) < maxDot);
         if (!madeProgress)
         {
+#if STAIR_DEBUG
             GD.Print("WalkStairs: no progress");
+#endif
             return false;
         }
 
@@ -292,7 +285,6 @@ public partial class PlayerCharacter : CharacterBody3D
 
         var down = -up + stepDownExtra;
         contact = ShootShapeCastGlobal(newPosition, down);
-        DebugDraw3D.DrawArrowLine(newPosition, newPosition + down, Colors.White, 0.1f, false, 0.1f);
         if (!contact.IsColliding())
         {
             GD.Print("WalkStairs: no floor found");
@@ -312,7 +304,9 @@ public partial class PlayerCharacter : CharacterBody3D
         {
             if (stepForwardTest.IsZeroApprox())
             {
+#if STAIR_DEBUG
                 GD.Print("WalkStairs: too steep and stepForwardTest is 0");
+#endif
                 return false;
             }
 
@@ -325,7 +319,9 @@ public partial class PlayerCharacter : CharacterBody3D
             var testHorizontalPositionSq = (testPosition - upPosition).LengthSquared();
             if (testHorizontalPositionSq <= horizontalMovementSq - 1.0e-8f)
             {
+#if STAIR_DEBUG
                 GD.Print("WalkStairs: stepForwardTest: We didn't move any further than in the previous test");
+#endif
                 return false;
             }
 
@@ -337,7 +333,9 @@ public partial class PlayerCharacter : CharacterBody3D
             var testContact = ShootShapeCastGlobal(testPosition, down);
             if (!testContact.IsColliding())
             {
+#if STAIR_DEBUG
                 GD.Print("WalkStairs: sweep down failed");
+#endif
                 return false;
             }
 
@@ -352,7 +350,9 @@ public partial class PlayerCharacter : CharacterBody3D
 
             if (IsSlopeTooSteep(testContact.GetCollisionNormal(0)))
             {
+#if STAIR_DEBUG
                 GD.Print("WalkStairs: still too steep");
+#endif
                 return false;
             }
         }
@@ -364,13 +364,6 @@ public partial class PlayerCharacter : CharacterBody3D
         MoveAndCollide(Vector3.Zero);
 
         return true;
-    }
-
-    private Vector3 NormalizedOr(Vector3 value, Vector3 onZeroValue)
-    {
-        var lq = value.LengthSquared();
-
-        return lq == 0.0f ? onZeroValue : value / Mathf.Sqrt(lq);
     }
 
     private bool CanWalkStairs(Vector3 velocity)
@@ -412,7 +405,7 @@ public partial class PlayerCharacter : CharacterBody3D
         _shapeCast.GlobalPosition = from;
         _shapeCast.TargetPosition = target;
         _shapeCast.ForceShapecastUpdate();
-        DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
+        // DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
 
         return _shapeCast;
     }
@@ -422,7 +415,7 @@ public partial class PlayerCharacter : CharacterBody3D
         _shapeCast.Position = from;
         _shapeCast.TargetPosition = target;
         _shapeCast.ForceShapecastUpdate();
-        DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
+        // DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
 
         return _shapeCast;
     }
