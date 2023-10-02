@@ -38,6 +38,10 @@ public partial class PlayerCharacter : CharacterBody3D
     [Export]
     public Vector3 StepDownExtra = Vector3.Zero;
 
+    [ExportSubgroup("Stick To Floor")]
+    [Export]
+    public Vector3 StickDown = new(0, -0.4f, 0);
+
     [ExportGroup("Jumping")]
     [Export]
     public float JumpForceN = 450.0f;
@@ -67,7 +71,6 @@ public partial class PlayerCharacter : CharacterBody3D
     [Export]
     public PackedScene Bullet;
 
-    private Vector2 _viewPoint = new(0.0f, 0.0f);
 
     private Vector2 ForwardVector => Vector2.Down.Rotated(_viewPoint.X);
 
@@ -80,6 +83,7 @@ public partial class PlayerCharacter : CharacterBody3D
         }
     }
 
+    private Vector2 _viewPoint = new(0.0f, 0.0f);
     private const float LookaroundSpeedReduction = 0.002f;
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private bool _isControlling;
@@ -88,7 +92,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
 
-    private Vector3 AimPosition => _cameraController.GlobalPosition;
+    private Vector3 AimOrigin => _cameraController.GlobalPosition;
 
     private CameraController _cameraController;
     private CollisionShape3D _collisionShape;
@@ -147,9 +151,18 @@ public partial class PlayerCharacter : CharacterBody3D
         MoveAndSlide();
 
         // TODO stick to floor
-
-
-        // TODO temp move to config 
+        if (!IsSupported() && !StickDown.IsZeroApprox())
+        {
+            if (Math.Abs(Velocity.Y) < 1.0e-4f)
+            {
+                var col = ShootShapeCast(Vector3.Zero, StickDown);
+                if (col.IsColliding())
+                {
+                    var frac = col.GetClosestCollisionSafeFraction();
+                    GlobalPosition += frac * StickDown;
+                }
+            }
+        }
 
         // Walk stairs
         // ported from https://github.com/jrouwe/JoltPhysics/blob/1b21180c67930f5669750a7912c55d90407586ee/Jolt/Physics/Character/CharacterVirtual.cpp#L1343
@@ -448,7 +461,7 @@ public partial class PlayerCharacter : CharacterBody3D
     {
         var bullet = Bullet.Instantiate<Bullet>();
         AddChild(bullet);
-        bullet.Shoot(AimPosition, AimVector);
+        bullet.Shoot(AimOrigin, AimVector);
         GD.Print("pew");
     }
 
