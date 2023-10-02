@@ -7,4 +7,4 @@ func _ready():
 	adjust_size_to_viewport()
 
 func adjust_size_to_viewport():
-	size = get_parent().get_viewport().get_visible_rect().size
+	set_deferred("size", get_parent().get_viewport().get_visible_rect().size)

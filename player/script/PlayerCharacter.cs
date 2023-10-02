@@ -22,6 +22,22 @@ public partial class PlayerCharacter : CharacterBody3D
     [Export]
     public float MassKg = 60.0f;
 
+    [ExportSubgroup("Walk Stairs")]
+    [Export]
+    public Vector3 StepUp = new(0, 0.4f, 0);
+
+    [Export]
+    public float StepForward = 0.02f;
+
+    [Export]
+    public float StepForwardTest = 0.15f;
+
+    [Export]
+    public float CosAngleForwardContact = Mathf.Cos(Mathf.DegToRad(75.0f));
+
+    [Export]
+    public Vector3 StepDownExtra = Vector3.Zero;
+
     [ExportGroup("Jumping")]
     [Export]
     public float JumpForceN = 450.0f;
@@ -134,15 +150,10 @@ public partial class PlayerCharacter : CharacterBody3D
 
 
         // TODO temp move to config 
-        var walkStairsStepUp = new Vector3(0, 0.4f, 0);
-        const float walkStairsStepForward = 0.02f;
-        const float walkStairsStopForwardTest = 0.15f;
-        var walkStairsCosAngleForwardContact = Mathf.Cos(Mathf.DegToRad(75.0f));
-        var walkStairsStepDownExtra = Vector3.Zero;
 
         // Walk stairs
         // ported from https://github.com/jrouwe/JoltPhysics/blob/1b21180c67930f5669750a7912c55d90407586ee/Jolt/Physics/Character/CharacterVirtual.cpp#L1343
-        if (!walkStairsStepUp.IsZeroApprox())
+        if (!StepUp.IsZeroApprox())
         {
             // how much we wanted to move horizontally
             var desiredHorizontalStep = desiredVelocity * (float)delta;
@@ -160,7 +171,7 @@ public partial class PlayerCharacter : CharacterBody3D
                 if (achievedHorizontalStep.Length() + 1.0e-4f < desiredHorizontalStep.Length() &&
                     CanWalkStairs(desiredVelocity))
                 {
-                    var stepForward = stepForwardNormalized * Mathf.Max(walkStairsStepForward,
+                    var stepForward = stepForwardNormalized * Mathf.Max(StepForward,
                         desiredHorizontalStep.Length() - achievedHorizontalStep.Length());
 
                     // Calculate how far to scan ahead for a floor. This is only used in
@@ -176,14 +187,14 @@ public partial class PlayerCharacter : CharacterBody3D
                     stepForwardTest -= stepForwardTest.Dot(UpDirection) * UpDirection;
                     stepForwardTest = stepForwardTest.NormalizedOr(stepForwardNormalized);
 
-                    if (stepForwardTest.Dot(stepForwardNormalized) < walkStairsCosAngleForwardContact)
+                    if (stepForwardTest.Dot(stepForwardNormalized) < CosAngleForwardContact)
                     {
                         stepForwardTest = stepForwardNormalized;
                     }
 
-                    stepForwardTest *= walkStairsStopForwardTest;
+                    stepForwardTest *= StepForwardTest;
 
-                    WalkStairs((float)delta, walkStairsStepUp, stepForward, stepForwardTest, walkStairsStepDownExtra);
+                    WalkStairs((float)delta, StepUp, stepForward, stepForwardTest, StepDownExtra);
                 }
             }
         }
@@ -254,7 +265,6 @@ public partial class PlayerCharacter : CharacterBody3D
         var horizontalMovementSq = horizontalMovement.LengthSquared();
         if (horizontalMovementSq < 1.0e-8f)
         {
-
 #if STAIR_DEBUG
             GD.Print("WalkStairs: no movement");
 #endif
