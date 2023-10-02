@@ -153,8 +153,9 @@ public partial class PlayerCharacter : CharacterBody3D
         // TODO stick to floor
         if (!IsSupported() && !StickDown.IsZeroApprox())
         {
-            if (Math.Sign(Velocity.Y) <= 0 && Math.Abs(Velocity.Y) < 1.0e-4f)
+            if (Velocity.Y is > -0.1f and < 1.0e-2f)
             {
+                GD.Print(Velocity.Y);
                 var col = ShootShapeCast(Vector3.Zero, StickDown);
                 if (col.IsColliding())
                 {
@@ -248,13 +249,16 @@ public partial class PlayerCharacter : CharacterBody3D
 
         var collision = GetLastSlideCollision();
 
-        var steepSlopeNormals = new List<Vector3>(collision.GetCollisionCount());
-        for (var i = 0; i < collision.GetCollisionCount(); i++)
+        var steepSlopeNormals = new List<Vector3>(4);
+        if (collision != null)
         {
-            if (collision.GetNormal(i).Dot(horizontalVelocity - collision.GetColliderVelocity(i)) < 0.0f
-                && IsSlopeTooSteep(collision.GetNormal(i)))
+            for (var i = 0; i < collision.GetCollisionCount(); i++)
             {
-                steepSlopeNormals.Add(collision.GetNormal(i));
+                if (collision.GetNormal(i).Dot(horizontalVelocity - collision.GetColliderVelocity(i)) < 0.0f
+                    && IsSlopeTooSteep(collision.GetNormal(i)))
+                {
+                    steepSlopeNormals.Add(collision.GetNormal(i));
+                }
             }
         }
 
