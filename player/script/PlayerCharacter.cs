@@ -153,7 +153,6 @@ public partial class PlayerCharacter : CharacterBody3D
         {
             if (Velocity.Y is > -1.0f and < 1.0e-2f)
             {
-                GD.Print(Velocity.Y);
                 var col = ShootShapeCast(Vector3.Zero, StickDown);
                 if (col.IsColliding())
                 {
