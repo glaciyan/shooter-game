@@ -151,7 +151,7 @@ public partial class PlayerCharacter : CharacterBody3D
         // TODO stick to floor
         if (!IsSupported() && !StickDown.IsZeroApprox())
         {
-            if (Velocity.Y is > -0.2f and < 1.0e-2f)
+            if (Velocity.Y is > -1.0f and < 1.0e-2f)
             {
                 GD.Print(Velocity.Y);
                 var col = ShootShapeCast(Vector3.Zero, StickDown);
