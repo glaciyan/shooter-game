@@ -153,7 +153,7 @@ public partial class PlayerCharacter : CharacterBody3D
         // TODO stick to floor
         if (!IsSupported() && !StickDown.IsZeroApprox())
         {
-            if (Math.Abs(Velocity.Y) < 1.0e-4f)
+            if (Math.Sign(Velocity.Y) <= 0 && Math.Abs(Velocity.Y) < 1.0e-4f)
             {
                 var col = ShootShapeCast(Vector3.Zero, StickDown);
                 if (col.IsColliding())
@@ -399,7 +399,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
         var horizontalVelocity = velocity - velocity.Dot(UpDirection) * UpDirection;
         // if we have enough horizontal vel and we are on a steep slope (simplified from jolt original code)
-        return !horizontalVelocity.IsZeroApprox() && IsOnWall();
+        return !horizontalVelocity.IsZeroApprox();
     }
 
     private bool IsSlopeTooSteep(Vector3 normal)
