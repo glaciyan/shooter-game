@@ -1,3 +1,4 @@
+#define STAIR_DEBUG
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -153,7 +154,7 @@ public partial class PlayerCharacter : CharacterBody3D
         // TODO stick to floor
         if (!IsSupported() && !StickDown.IsZeroApprox())
         {
-            if (Velocity.Y is > -0.1f and < 1.0e-2f)
+            if (Velocity.Y is > -0.2f and < 1.0e-2f)
             {
                 GD.Print(Velocity.Y);
                 var col = ShootShapeCast(Vector3.Zero, StickDown);
@@ -194,10 +195,6 @@ public partial class PlayerCharacter : CharacterBody3D
                     // normal is not too steep. Start with the ground normal in the
                     // horizontal plane and normalizing it
                     var stepForwardTest = -GetFloorNormal();
-#if STAIR_DEBUG
-                    DebugDraw3D.DrawArrowRay(GlobalPosition + Vector3.Up, stepForwardTest, 1.0f, Colors.Blue, 0.5f,
-                        false, 0.5f);
-#endif
                     stepForwardTest -= stepForwardTest.Dot(UpDirection) * UpDirection;
                     stepForwardTest = stepForwardTest.NormalizedOr(stepForwardNormalized);
 
@@ -208,7 +205,9 @@ public partial class PlayerCharacter : CharacterBody3D
 
                     stepForwardTest *= StepForwardTest;
 
-                    WalkStairs((float)delta, StepUp, stepForward, stepForwardTest, StepDownExtra);
+                    var success = WalkStairs((float)delta, StepUp, stepForward, stepForwardTest, StepDownExtra);
+                    // reset any lost velocity from sliding into the stair
+                    if (success) Velocity = desiredVelocity;
                 }
             }
         }
@@ -239,42 +238,10 @@ public partial class PlayerCharacter : CharacterBody3D
 #if STAIR_DEBUG
         DebugDraw3D.DrawArrowLine(GlobalPosition, upPosition, Colors.White, 0.1f, false, 0.1f);
 #endif
-
-
-        // Collect normals of steep slopes that we would like to walk stairs on.
-        // We need to do this before calling MoveShape because it will update
-        // mActiveContacts. 
-        var characterVelocity = stepForward / delta;
-        var horizontalVelocity = characterVelocity - characterVelocity.Dot(UpDirection) * UpDirection;
-
-        var collision = GetLastSlideCollision();
-
-        var steepSlopeNormals = new List<Vector3>(4);
-        if (collision != null)
-        {
-            for (var i = 0; i < collision.GetCollisionCount(); i++)
-            {
-                if (collision.GetNormal(i).Dot(horizontalVelocity - collision.GetColliderVelocity(i)) < 0.0f
-                    && IsSlopeTooSteep(collision.GetNormal(i)))
-                {
-                    steepSlopeNormals.Add(collision.GetNormal(i));
-                }
-            }
-        }
-
-        if (steepSlopeNormals.Count == 0)
-        {
-#if STAIR_DEBUG
-            GD.Print("WalkStairs: no steep slopes");
-#endif
-            return false; // no steep slopes
-        }
-
-
         // Horizontal movement
         var gp = GlobalPosition;
         GlobalPosition = upPosition;
-        MoveAndCollide(characterVelocity * delta); // TODO this might break
+        MoveAndCollide(stepForward);
         var newPosition = GlobalPosition;
         GlobalPosition = gp;
 
@@ -286,20 +253,6 @@ public partial class PlayerCharacter : CharacterBody3D
             GD.Print("WalkStairs: no movement");
 #endif
             return false; // no movement
-        }
-
-        // Check if we made any progress towards any of the steep slopes, if not we
-        // just slid along the slope so we need to cancel the stair walk or else we
-        // will move faster than we should as we've done normal movement first and
-        // then stair walk.
-        var maxDot = -0.05f * stepForward.Length();
-        var madeProgress = steepSlopeNormals.Any(normal => normal.Dot(horizontalMovement) < maxDot);
-        if (!madeProgress)
-        {
-#if STAIR_DEBUG
-            GD.Print("WalkStairs: no progress");
-#endif
-            return false;
         }
 
 #if STAIR_DEBUG
@@ -390,7 +343,6 @@ public partial class PlayerCharacter : CharacterBody3D
         newPosition += down;
 
         GlobalPosition = newPosition;
-        MoveAndCollide(Vector3.Zero);
 
         return true;
     }
