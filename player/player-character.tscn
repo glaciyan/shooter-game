@@ -1,15 +1,18 @@
-[gd_scene load_steps=13 format=3 uid="uid://b3gr35vagtxy8"]
+[gd_scene load_steps=14 format=3 uid="uid://b3gr35vagtxy8"]
 
 [ext_resource type="Script" path="res://player/script/PlayerCharacter.cs" id="1_e76sx"]
 [ext_resource type="Script" path="res://addons/smoothing/smoothing.gd" id="2_0cvko"]
 [ext_resource type="PackedScene" uid="uid://ckqpg015s4kos" path="res://bullet/bullet.tscn" id="2_bljs8"]
 [ext_resource type="Script" path="res://player/script/CameraController.cs" id="4_8wyyi"]
-[ext_resource type="Script" path="res://player/script/Crosshair.gd" id="5_nifvr"]
+[ext_resource type="Script" path="res://player/script/Crosshair.gd" id="5_ntg4d"]
 [ext_resource type="Texture2D" uid="uid://nqyu67hkught" path="res://assets/crosshair.png" id="5_y8etn"]
 [ext_resource type="Script" path="res://player/script/WeaponViewport.gd" id="6_ie6jj"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_6ipyk"]
+size = Vector3(0.6, 0.8, 0.6)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_a8cmu"]
-size = Vector3(0.625, 1.75, 0.625)
+size = Vector3(0.6, 1.8, 0.6)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pbjks"]
 
@@ -29,6 +32,7 @@ height = 0.3
 collision_layer = 2
 collision_mask = 33
 script = ExtResource("1_e76sx")
+CrouchShape = SubResource("BoxShape3D_6ipyk")
 Bullet = ExtResource("2_bljs8")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
@@ -38,30 +42,28 @@ shape = SubResource("BoxShape3D_a8cmu")
 visible = false
 mesh = SubResource("CapsuleMesh_yjl3t")
 
-[node name="VisualSmoothing" type="Node3D" parent="."]
-script = ExtResource("2_0cvko")
-
-[node name="CameraController" type="Node3D" parent="VisualSmoothing"]
+[node name="CameraController" type="Node3D" parent="."]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 script = ExtResource("4_8wyyi")
 metadata/_edit_group_ = true
 
-[node name="MainCamera" type="Camera3D" parent="VisualSmoothing/CameraController"]
+[node name="MainCamera" type="Camera3D" parent="CameraController"]
 cull_mask = 1048573
 current = true
 
-[node name="HandsRemoteTransform3D" type="RemoteTransform3D" parent="VisualSmoothing/CameraController/MainCamera"]
-remote_path = NodePath("../../../../HandsDisplay/SubViewportContainer/SubViewport/HandsCamera3D")
+[node name="HandsRemoteTransform3D" type="RemoteTransform3D" parent="CameraController/MainCamera"]
+remote_path = NodePath("../../../HandsDisplay/SubViewportContainer/SubViewport/HandsCamera3D")
 
-[node name="Crosshair" type="TextureRect" parent="VisualSmoothing/CameraController/MainCamera"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Crosshair" type="TextureRect" parent="CameraController/MainCamera"]
+offset_right = 40.0
+offset_bottom = 40.0
 texture = ExtResource("5_y8etn")
 stretch_mode = 3
-script = ExtResource("5_nifvr")
+script = ExtResource("5_ntg4d")
+
+[node name="VisualSmoothing" type="Node3D" parent="."]
+script = ExtResource("2_0cvko")
 
 [node name="HandsDisplay" type="Control" parent="."]
 layout_mode = 3

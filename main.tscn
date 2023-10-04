@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://c6356ubeoiydj"]
+[gd_scene load_steps=11 format=3 uid="uid://c6356ubeoiydj"]
 
 [ext_resource type="PackedScene" uid="uid://b3gr35vagtxy8" path="res://player/player-character.tscn" id="1_bfuh2"]
 [ext_resource type="Script" path="res://main.gd" id="1_ibyna"]
@@ -25,6 +25,9 @@ albedo_color = Color(0.176471, 0.203922, 0.4, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r8oc7"]
 albedo_color = Color(0.913725, 0.203922, 0.4, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_07e4w"]
+size = Vector3(1, 1.76391, 2.7724)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ku4yw"]
 
@@ -87,72 +90,96 @@ transform = Transform3D(0.764078, 0, 0.645124, 0, 1, 0, -0.645124, 0, 0.764078, 
 use_collision = true
 material = SubResource("StandardMaterial3D_r8oc7")
 
+[node name="StaticBody3D" type="StaticBody3D" parent="WorldGeometry"]
+transform = Transform3D(0.466186, 0.884687, 0, -0.884687, 0.466186, 0, 0, 0, 1, 2.08014, 0.365936, 11.9973)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WorldGeometry/StaticBody3D"]
+shape = SubResource("BoxShape3D_07e4w")
+
+[node name="RampedStairs" type="CSGCombiner3D" parent="WorldGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08014, 0.153916, 11.0935)
+use_collision = true
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D11" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.95149)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D12" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 0.95149)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D13" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 0.95149)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D14" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0.95149)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D15" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.81251)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D16" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 1.81251)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D17" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 1.81251)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D18" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 1.81251)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
 [node name="CSGCombiner3D" type="CSGCombiner3D" parent="WorldGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.87675, 0.199057, 6.26277)
 use_collision = true
 
 [node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.98059, 0, -1.49012e-08, 1.07737)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
 [node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.98059, 0.347201, 0.185669, 1.07737)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
 [node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.98059, 0.693843, 0.37563, 1.07737)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
 [node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0)
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGCombiner3D2" type="CSGCombiner3D" parent="WorldGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.87675, 0.199057, 7.21426)
-use_collision = true
-
-[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D2"]
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 0)
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 0)
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0)
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGCombiner3D3" type="CSGCombiner3D" parent="WorldGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.87675, 0.199057, 8.07528)
-use_collision = true
-
-[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D3"]
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.347201, 0.185669, 0)
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.693843, 0.37563, 0)
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.98059, 1.04104, 0.561299, 1.07737)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
@@ -163,4 +190,4 @@ size = Vector3(1, 0.3, 1)
 material = SubResource("StandardMaterial3D_ku4yw")
 
 [node name="PlayerCharacter" parent="." instance=ExtResource("1_bfuh2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.53042, 1.72673, 10.6762)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65872, 1.72673, 3.00803)

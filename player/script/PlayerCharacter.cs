@@ -61,6 +61,16 @@ public partial class PlayerCharacter : CharacterBody3D
     public float AirFrictionFactor = 0.05f;
 
     [ExportSubgroup("")]
+    [ExportGroup("Crouching")]
+    [Export]
+    public Shape3D CrouchShape;
+
+    [Export]
+    public float StandingHeight = 1.8f;
+
+    [Export]
+    public float CrouchingHeight = 0.8f;
+
     [ExportGroup("Camera")]
     [Export(PropertyHint.Range, "0.1, 10, 0.1")]
     public float LookaroundSpeed = 1.0f;
@@ -86,6 +96,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private bool _isControlling;
     private const float FloorMaxAngleThreshold = 0.01f;
+    private Shape3D _standingShape;
 
     private Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
@@ -98,8 +109,9 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public override void _Ready()
     {
-        _cameraController = GetNode<CameraController>("VisualSmoothing/CameraController");
+        _cameraController = GetNode<CameraController>("%CameraController");
         _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
+        _standingShape = (Shape3D)_collisionShape.Shape.Duplicate();
 
         _shapeCast.Shape = _collisionShape.Shape;
         _shapeCast.DebugShapeCustomColor = new Color(Colors.Aqua);
@@ -140,6 +152,23 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
+        // Crouching
+
+        if (Input.IsActionPressed("crouch"))
+        {
+            ChangeShape(CrouchShape);
+        }
+        else if (_collisionShape.Shape == CrouchShape)
+        {
+            _shapeCast.Shape = _standingShape;
+            var collision = ShootShapeCast(Vector3.Up * 0.5f, Vector3.Down);
+            ChangeShape(_standingShape);
+            // when player is uncrouching they are stuck in the ground, teleport up a little
+            var missingHeight = (StandingHeight - CrouchingHeight) / 2;
+            var gp = GlobalPosition;
+            GlobalPosition = new Vector3(gp.X, gp.Y + missingHeight, gp.Z);
+        }
+
         var oldPosition = GlobalPosition;
 
         Velocity = Movement(delta, Gravity(delta, Jump(Velocity)));
@@ -492,5 +521,11 @@ public partial class PlayerCharacter : CharacterBody3D
             velocity.Y = JumpForceN / MassKg;
 
         return velocity;
+    }
+
+    private void ChangeShape(Shape3D shape)
+    {
+        _collisionShape.SetDeferred("shape", shape);
+        _shapeCast.SetDeferred("shape", shape);
     }
 }
