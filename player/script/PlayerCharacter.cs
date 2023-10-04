@@ -79,7 +79,9 @@ public partial class PlayerCharacter : CharacterBody3D
     [Export]
     public PackedScene Bullet;
 
+    // public vars
 
+    // private vars
     private Vector2 ForwardVector => Vector2.Down.Rotated(_viewPoint.X);
 
     private Vector2 SidewaysVector
@@ -103,6 +105,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private Vector3 AimOrigin => _cameraController.GlobalPosition;
 
+    // Nodes
     private CameraController _cameraController;
     private CollisionShape3D _collisionShape;
     private ShapeCast3D _shapeCast = new();
@@ -152,22 +155,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
-        // Crouching
-
-        if (Input.IsActionPressed("crouch"))
-        {
-            ChangeShape(CrouchShape);
-        }
-        else if (_collisionShape.Shape == CrouchShape)
-        {
-            _shapeCast.Shape = _standingShape;
-            var collision = ShootShapeCast(Vector3.Up * 0.5f, Vector3.Down);
-            ChangeShape(_standingShape);
-            // when player is uncrouching they are stuck in the ground, teleport up a little
-            var missingHeight = (StandingHeight - CrouchingHeight) / 2;
-            var gp = GlobalPosition;
-            GlobalPosition = new Vector3(gp.X, gp.Y + missingHeight, gp.Z);
-        }
+        Crouch();
 
         var oldPosition = GlobalPosition;
 
@@ -177,7 +165,13 @@ public partial class PlayerCharacter : CharacterBody3D
 
         MoveAndSlide();
 
-        // TODO stick to floor
+        StickToFloor();
+
+        DoWalkStairs(delta, desiredVelocity, oldPosition);
+    }
+
+    private void StickToFloor()
+    {
         if (!IsSupported() && !StickDown.IsZeroApprox())
         {
             if (Velocity.Y is > -1.0f and < 1.0e-2f)
@@ -190,7 +184,32 @@ public partial class PlayerCharacter : CharacterBody3D
                 }
             }
         }
+    }
 
+    private void Crouch()
+    {
+        if (Input.IsActionPressed("crouch"))
+        {
+            ChangeShape(CrouchShape);
+        }
+        else if (_collisionShape.Shape == CrouchShape)
+        {
+            ChangeShape(_standingShape);
+            // when player is uncrouching they are stuck in the ground, teleport up a little
+            var missingHeight = (StandingHeight - CrouchingHeight) / 2;
+            var collision = ShootShapeCast(Vector3.Zero, new Vector3(0, -missingHeight, 0));
+            if (collision.IsColliding())
+            {
+                GD.Print(collision.GetClosestCollisionSafeFraction());
+                var gp = GlobalPosition;
+                GlobalPosition = new Vector3(gp.X,
+                    gp.Y + missingHeight * (1.0f - collision.GetClosestCollisionSafeFraction()), gp.Z);
+            }
+        }
+    }
+
+    private void DoWalkStairs(double delta, Vector3 desiredVelocity, Vector3 oldPosition)
+    {
         // Walk stairs
         // ported from https://github.com/jrouwe/JoltPhysics/blob/1b21180c67930f5669750a7912c55d90407586ee/Jolt/Physics/Character/CharacterVirtual.cpp#L1343
         if (!StepUp.IsZeroApprox())
