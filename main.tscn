@@ -23,82 +23,37 @@ albedo_color = Color(0.631373, 0.631373, 0.631373, 1)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_clqsw"]
 albedo_color = Color(0.176471, 0.203922, 0.4, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r8oc7"]
-albedo_color = Color(0.913725, 0.203922, 0.4, 1)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_07e4w"]
 size = Vector3(1, 1.76391, 2.7724)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ku4yw"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r8oc7"]
+albedo_color = Color(0.913725, 0.203922, 0.4, 1)
+
 [node name="main" type="Node3D"]
 script = ExtResource("1_ibyna")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="Lighting" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Lighting"]
 transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
 light_color = Color(0.894118, 0.737255, 0.615686, 1)
 shadow_enabled = true
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Lighting"]
 environment = SubResource("Environment_ofm0g")
 
 [node name="WorldGeometry" type="Node3D" parent="."]
 
-[node name="CSGBox3D" type="CSGBox3D" parent="WorldGeometry"]
+[node name="Floor" type="CSGBox3D" parent="WorldGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.000494719, 0)
 use_collision = true
 size = Vector3(50, 1, 50)
 material = SubResource("StandardMaterial3D_2qb2x")
 
-[node name="CSGBox3D2" type="CSGBox3D" parent="WorldGeometry"]
-transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, -1.99903, 1.0005, -1.93265)
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry"]
-transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, -5.22475, 2.98969, -1.88733)
-use_collision = true
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D4" type="CSGBox3D" parent="WorldGeometry"]
-transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, 0.804025, 1.50049, -1.93265)
-use_collision = true
-size = Vector3(1, 2, 1)
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry"]
-transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, 5.46442, 1.50049, -1.93265)
-use_collision = true
-collision_layer = 32
-size = Vector3(1, 2, 1)
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D5" type="CSGBox3D" parent="WorldGeometry"]
-transform = Transform3D(0.811462, 0.584405, 0, -0.584405, 0.811462, 0, 0, 0, 1, 2.77603, 0.970103, 2.56573)
-use_collision = true
-size = Vector3(1, 4.67055, 1)
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D6" type="CSGBox3D" parent="WorldGeometry"]
-transform = Transform3D(0.643456, 0.765483, 0, -0.765483, 0.643456, 0, 0, 0, 1, 2.77603, 0.652043, 4.1402)
-use_collision = true
-size = Vector3(1, 5.72278, 1)
-material = SubResource("StandardMaterial3D_clqsw")
-
-[node name="CSGBox3D3" type="CSGBox3D" parent="WorldGeometry"]
-transform = Transform3D(0.764078, 0, 0.645124, 0, 1, 0, -0.645124, 0, 0.764078, 2.97235, 1.0005, -0.227831)
-use_collision = true
-material = SubResource("StandardMaterial3D_r8oc7")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="WorldGeometry"]
-transform = Transform3D(0.466186, 0.884687, 0, -0.884687, 0.466186, 0, 0, 0, 1, 2.08014, 0.365936, 11.9973)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="WorldGeometry/StaticBody3D"]
-shape = SubResource("BoxShape3D_07e4w")
-
 [node name="RampedStairs" type="CSGCombiner3D" parent="WorldGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08014, 0.153916, 11.0935)
-use_collision = true
 
 [node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
 use_collision = true
@@ -159,35 +114,87 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.04104, 0.561299, 1.81251)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
-[node name="CSGCombiner3D" type="CSGCombiner3D" parent="WorldGeometry"]
+[node name="StaticBody3D" type="StaticBody3D" parent="WorldGeometry/RampedStairs"]
+transform = Transform3D(0.466186, 0.884687, 0, -0.884687, 0.466186, 0, 0, 0, 1, 0, 0.21202, 0.9038)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WorldGeometry/RampedStairs/StaticBody3D"]
+shape = SubResource("BoxShape3D_07e4w")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="WorldGeometry/RampedStairs/StaticBody3D"]
+transform = Transform3D(0.466387, -0.884581, 0, 0.884581, 0.466387, 0, 0, 0, 1, 0.514036, 0.899239, 0)
+shape = SubResource("BoxShape3D_07e4w")
+
+[node name="NormalStairs" type="CSGCombiner3D" parent="WorldGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.87675, 0.199057, 6.26277)
 use_collision = true
 
-[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/NormalStairs"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.98059, 0, -1.49012e-08, 1.07737)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
-[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/NormalStairs"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.98059, 0.347201, 0.185669, 1.07737)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
-[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/NormalStairs"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.98059, 0.693843, 0.37563, 1.07737)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
-[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/CSGCombiner3D"]
+[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/NormalStairs"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.98059, 1.04104, 0.561299, 1.07737)
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
-[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry"]
+[node name="Boxes" type="Node3D" parent="WorldGeometry"]
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="WorldGeometry/Boxes"]
 transform = Transform3D(0.860662, 0, 2.18119, 0, 1, 0, -0.509177, 0, 3.68687, -4.48263, 0.650495, 6.39196)
 use_collision = true
 size = Vector3(1, 0.3, 1)
 material = SubResource("StandardMaterial3D_ku4yw")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, -1.99903, 1.0005, -1.93265)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, -5.22475, 2.98969, -1.88733)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, 0.804025, 1.50049, -1.93265)
+use_collision = true
+size = Vector3(1, 2, 1)
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, 5.46442, 1.50049, -1.93265)
+use_collision = true
+collision_layer = 32
+size = Vector3(1, 2, 1)
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.811462, 0.584405, 0, -0.584405, 0.811462, 0, 0, 0, 1, 2.77603, 0.970103, 2.56573)
+use_collision = true
+size = Vector3(1, 4.67055, 1)
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.643456, 0.765483, 0, -0.765483, 0.643456, 0, 0, 0, 1, 2.77603, 0.652043, 4.1402)
+use_collision = true
+size = Vector3(1, 5.72278, 1)
+material = SubResource("StandardMaterial3D_clqsw")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.764078, 0, 0.645124, 0, 1, 0, -0.645124, 0, 0.764078, 2.97235, 1.0005, -0.227831)
+use_collision = true
+material = SubResource("StandardMaterial3D_r8oc7")
 
 [node name="PlayerCharacter" parent="." instance=ExtResource("1_bfuh2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65872, 1.72673, 3.00803)

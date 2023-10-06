@@ -8,4 +8,29 @@ public static class VectorUtil
     {
         var lq = value.LengthSquared();
         return lq == 0.0f ? onZeroValue : value / Mathf.Sqrt(lq);
-    }}
+    }
+
+    public static Vector3 ToVector3Flat(this Vector2 v, float y = 0f) => new(v.X, y, v.Y);
+    public static Vector2 ToVector2Flat(this Vector3 v) => new(v.X, v.Z);
+
+    public static Vector3 FastLimit(this Vector3 v)
+    {
+        var lq = v.LengthSquared();
+        return lq > 1f ? v / Mathf.Sqrt(lq) : v;
+    }
+
+    public static Vector2 FastLimit(this Vector2 v)
+    {
+        var lq = v.LengthSquared();
+        return lq > 1f ? v / Mathf.Sqrt(lq) : v;
+    }
+
+    // visual explanation: https://www.geogebra.org/calculator/hwqqt9ts
+    public static Vector2 RotateToBasis(this Vector2 v, Vector2 basis) =>
+        new(basis.Y * v.X + basis.X * v.Y,
+            -basis.X * v.X + basis.Y * v.Y);
+
+    public static Vector2 InvertRotationToBasis(this Vector2 v, Vector2 basis) =>
+        new(basis.Y * v.X - basis.X * v.Y,
+            basis.X * v.X + basis.Y * v.Y);
+}

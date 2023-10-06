@@ -9,7 +9,10 @@ public partial class PlayerCharacter : CharacterBody3D
 {
     [ExportGroup("Moving")]
     [Export]
-    public float MaxVelocity = 5.0f;
+    public float MaxSpeedWalking = 5.0f;
+
+    [Export]
+    public float MaxAcceleration = 40f;
 
     [Export]
     public float MovementForce = 2700.0f;
@@ -102,7 +105,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private bool _isControlling;
     private const float FloorMaxAngleThreshold = 0.01f;
     private Shape3D _standingShape;
-    private float _maxVelocity;
+    private float _maxSpeed;
 
     private Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
@@ -116,7 +119,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public override void _Ready()
     {
-        _maxVelocity = MaxVelocity;
+        _maxSpeed = MaxSpeedWalking;
         _cameraController = GetNode<CameraController>("%CameraController");
         _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
         _standingShape = (Shape3D)_collisionShape.Shape.Duplicate();
@@ -134,6 +137,16 @@ public partial class PlayerCharacter : CharacterBody3D
             @event is InputEventMouseMotion mouseMotion)
         {
             _viewPoint.X += mouseMotion.Relative.X * LookaroundSpeed * LookaroundSpeedReduction;
+            switch (_viewPoint.X)
+            {
+                case < -2 * Mathf.Pi:
+                    _viewPoint.X += 2 * Mathf.Pi;
+                    break;
+                case > 2 * Mathf.Pi:
+                    _viewPoint.X -= 2 * Mathf.Pi;
+                    break;
+            }
+
             _viewPoint.Y += mouseMotion.Relative.Y * LookaroundSpeed * LookaroundSpeedReduction;
             _viewPoint.Y = (float)Math.Clamp(_viewPoint.Y, -Math.PI / 2, Math.PI / 2);
 
@@ -194,12 +207,12 @@ public partial class PlayerCharacter : CharacterBody3D
         if (Input.IsActionPressed("crouch"))
         {
             ChangeShape(CrouchShape);
-            _maxVelocity = CrouchMaxVelocity;
+            _maxSpeed = CrouchMaxVelocity;
         }
         else if (_collisionShape.Shape == CrouchShape)
         {
             ChangeShape(_standingShape);
-            _maxVelocity = MaxVelocity;
+            _maxSpeed = MaxSpeedWalking;
             // when player is uncrouching they are stuck in the ground, teleport up a little
             var missingHeight = (StandingHeight - CrouchingHeight) / 2;
             var collision = ShootShapeCast(Vector3.Zero, new Vector3(0, -missingHeight, 0));
@@ -469,63 +482,44 @@ public partial class PlayerCharacter : CharacterBody3D
         GD.Print("pew");
     }
 
+    // -y is forward, +x is right
+    private Vector2 _velocity = Vector2.Zero;
+
     private Vector3 Movement(double delta, Vector3 velocity)
     {
-        // GD.Print(-_camera.Transform.Basis.Z);
         var inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
 
-        // direction with view and input
-        var forwardDirection = ForwardVector * inputDir.Y;
-        var sidewaysDirection = SidewaysVector * inputDir.X;
-
-        // final direction vector by adding horizontal and vertical together
-        var direction = (forwardDirection + sidewaysDirection).Normalized();
+        var sidewaysInput = SidewaysVector * inputDir.X;
+        var forwardInput = ForwardVector * inputDir.Y;
         if (!IsOnFloor())
         {
-            direction = forwardDirection.Normalized() * AirSpeedControl +
-                        sidewaysDirection.Normalized() * AirStrafeControl;
+            forwardInput *= AirSpeedControl;
+            sidewaysInput *= AirStrafeControl;
         }
 
-        // DebugDraw3D.DrawRay(Position, new Vector3(direction.X, 0, direction.Y), 1, Colors.DarkCyan);
+        var input = (forwardInput + sidewaysInput).FastLimit().ToVector3Flat();
 
-        velocity.X = Acceleration(delta, velocity.X, direction.X);
-        velocity.Z = Acceleration(delta, velocity.Z, direction.Y);
+        // var vel = velocity.ToVector2Flat().RotateToBasis(ForwardVector);
+        // GD.Print(vel);
+        //
+        // var debug = new Vector2(0f, -1f).RotateToBasis(ForwardVector);
+        // DebugDraw3D.DrawRay(GlobalPosition, debug.ToVector3Flat(), debug.Length(), Colors.Red, 0.1f);
+        // debug -= ForwardVector * 10;
+        // DebugDraw3D.DrawRay(GlobalPosition, debug.ToVector3Flat(), debug.Length(), Colors.Blue, 0.1f);
+        // var inverse = debug.InvertRotationToBasis(ForwardVector);
+        // DebugDraw3D.DrawRay(GlobalPosition, inverse.ToVector3Flat(), inverse.Length(), Colors.Red, 0.1f);
 
-        // limit speed on X and Z
-        var xzVelocity = new Vector2(velocity.X, velocity.Z);
-        if (xzVelocity.Length() > MaxVelocity)
-        {
-            xzVelocity = xzVelocity.Normalized() * MaxVelocity;
-            velocity.X = xzVelocity.X;
-            velocity.Z = xzVelocity.Y;
-        }
+        var desiredVelocity = input * _maxSpeed;
+        var maxSpeedChange = MaxAcceleration * (float)delta;
 
-        // we are still moving no need to decelerate
-        if (!Mathf.IsZeroApprox(direction.Length()))
-        {
-            // DebugDraw3D.DrawRay(Position, velocity, velocity.Length(), Colors.Blue);
-            return velocity;
-        }
+        // set forward to desired
 
-        // decelerate with friction
-        var friction = IsOnFloor() ? Friction : Friction * AirFrictionFactor;
 
-        // using movementDirection here because MoveToward would equally slow down on both axes causing
-        // shifting to the side in deceleration
-        var movementDirection = new Vector2(velocity.X, velocity.Z).Normalized();
-        velocity.X = Mathf.MoveToward(velocity.X, 0, friction * (float)delta * Math.Abs(movementDirection.X));
-        velocity.Z = Mathf.MoveToward(velocity.Z, 0, friction * (float)delta * Math.Abs(movementDirection.Y));
-
-        // DebugDraw3D.DrawRay(Position, velocity, velocity.Length(), Colors.Red);
+        var balance = Mathf.IsZeroApprox(input.LengthSquared()) ? Velocity.Normalized() : input;
+        velocity.X = Mathf.MoveToward(velocity.X, desiredVelocity.X, Math.Abs(maxSpeedChange * balance.X));
+        velocity.Z = Mathf.MoveToward(velocity.Z, desiredVelocity.Z, Math.Abs(maxSpeedChange * balance.Z));
 
         return velocity;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private float Acceleration(double d, float v, float strength)
-    {
-        v += strength * (MovementForce - Friction) / MassKg * (float)d;
-        return v;
     }
 
     private Vector3 Gravity(double delta, Vector3 velocity)
