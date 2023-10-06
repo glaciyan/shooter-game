@@ -66,6 +66,9 @@ public partial class PlayerCharacter : CharacterBody3D
     public Shape3D CrouchShape;
 
     [Export]
+    public float CrouchMaxVelocity = 3.0f;
+
+    [Export]
     public float StandingHeight = 1.8f;
 
     [Export]
@@ -99,6 +102,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private bool _isControlling;
     private const float FloorMaxAngleThreshold = 0.01f;
     private Shape3D _standingShape;
+    private float _maxVelocity;
 
     private Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
@@ -112,6 +116,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public override void _Ready()
     {
+        _maxVelocity = MaxVelocity;
         _cameraController = GetNode<CameraController>("%CameraController");
         _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
         _standingShape = (Shape3D)_collisionShape.Shape.Duplicate();
@@ -151,8 +156,6 @@ public partial class PlayerCharacter : CharacterBody3D
         DebugDraw2D.SetText("IsSupported", IsSupported());
     }
 
-    private bool _shapeCastValid;
-
     public override void _PhysicsProcess(double delta)
     {
         Crouch();
@@ -191,16 +194,17 @@ public partial class PlayerCharacter : CharacterBody3D
         if (Input.IsActionPressed("crouch"))
         {
             ChangeShape(CrouchShape);
+            _maxVelocity = CrouchMaxVelocity;
         }
         else if (_collisionShape.Shape == CrouchShape)
         {
             ChangeShape(_standingShape);
+            _maxVelocity = MaxVelocity;
             // when player is uncrouching they are stuck in the ground, teleport up a little
             var missingHeight = (StandingHeight - CrouchingHeight) / 2;
             var collision = ShootShapeCast(Vector3.Zero, new Vector3(0, -missingHeight, 0));
             if (collision.IsColliding())
             {
-                GD.Print(collision.GetClosestCollisionSafeFraction());
                 var gp = GlobalPosition;
                 GlobalPosition = new Vector3(gp.X,
                     gp.Y + missingHeight * (1.0f - collision.GetClosestCollisionSafeFraction()), gp.Z);
@@ -249,7 +253,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
                     stepForwardTest *= StepForwardTest;
 
-                    var success = WalkStairs((float)delta, StepUp, stepForward, stepForwardTest, StepDownExtra);
+                    var success = WalkStairs(StepUp, stepForward, stepForwardTest, StepDownExtra);
                     // reset any lost velocity from sliding into the stair
                     if (success) Velocity = desiredVelocity;
                 }
@@ -257,7 +261,7 @@ public partial class PlayerCharacter : CharacterBody3D
         }
     }
 
-    private bool WalkStairs(float delta, Vector3 stepUp, Vector3 stepForward, Vector3 stepForwardTest,
+    private bool WalkStairs(Vector3 stepUp, Vector3 stepForward, Vector3 stepForwardTest,
         Vector3 stepDownExtra)
     {
         var up = stepUp;
