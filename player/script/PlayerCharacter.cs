@@ -150,11 +150,6 @@ public partial class PlayerCharacter : CharacterBody3D
             _viewPoint.Y = (float)Math.Clamp(_viewPoint.Y, -Math.PI / 2, Math.PI / 2);
 
             _cameraController.RotateTo(_viewPoint);
-
-            var transform = Transform;
-            transform.Basis = Basis.Identity;
-            Transform = transform;
-            RotateObjectLocal(Vector3.Up, -_viewPoint.X);
         }
 
         if (@event.IsActionPressed("shoot"))
@@ -178,11 +173,9 @@ public partial class PlayerCharacter : CharacterBody3D
     {
         Crouch();
 
-        var oldPosition = GlobalPosition;
-
         Velocity = Movement(delta, Gravity(delta, Jump(Velocity)));
 
-        var desiredVelocity = Velocity;
+        var (oldPosition, desiredVelocity) = (GlobalPosition, Velocity);
 
         MoveAndSlide();
 
