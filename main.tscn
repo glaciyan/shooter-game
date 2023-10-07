@@ -196,5 +196,10 @@ transform = Transform3D(0.764078, 0, 0.645124, 0, 1, 0, -0.645124, 0, 0.764078, 
 use_collision = true
 material = SubResource("StandardMaterial3D_r8oc7")
 
+[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.764078, 0, 0.645124, 0, 1, 0, -0.645124, 0, 0.764078, -1.0466, 1.26907, -0.227831)
+cast_shadow = 3
+material = SubResource("StandardMaterial3D_r8oc7")
+
 [node name="PlayerCharacter" parent="." instance=ExtResource("1_bfuh2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65872, 1.72673, 3.00803)

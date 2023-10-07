@@ -56,9 +56,6 @@ metadata/_edit_group_ = true
 cull_mask = 1048573
 current = true
 
-[node name="RayCast3D" type="RayCast3D" parent="Smoothing/CameraController/MainCamera"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
-
 [node name="HandsRemoteTransform3D" type="RemoteTransform3D" parent="Smoothing/CameraController/MainCamera"]
 remote_path = NodePath("../../../../HandsDisplay/SubViewportContainer/SubViewport/HandsCamera3D")
 

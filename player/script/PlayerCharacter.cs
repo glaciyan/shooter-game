@@ -129,7 +129,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
         StartControlling();
     }
-
+    
     public override void _Input(InputEvent @event)
     {
         if (_cameraController != null && Input.MouseMode == Input.MouseModeEnum.Captured &&
@@ -186,16 +186,13 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private void StickToFloor()
     {
-        if (!IsSupported() && !StickDown.IsZeroApprox())
+        if (!IsSupported() && !StickDown.IsZeroApprox() && Velocity.Y is > -1.0f and < 1.0e-2f)
         {
-            if (Velocity.Y is > -1.0f and < 1.0e-2f)
+            var col = ShootShapeCast(Vector3.Zero, StickDown);
+            if (col.IsColliding())
             {
-                var col = ShootShapeCast(Vector3.Zero, StickDown);
-                if (col.IsColliding())
-                {
-                    var frac = col.GetClosestCollisionSafeFraction();
-                    GlobalPosition += frac * StickDown;
-                }
+                var frac = col.GetClosestCollisionSafeFraction();
+                GlobalPosition += frac * StickDown;
             }
         }
     }
