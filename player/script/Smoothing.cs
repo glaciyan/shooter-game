@@ -1,7 +1,6 @@
 using Godot;
-using shootergame.player.script;
 
-namespace shootergame.player;
+namespace shootergame.player.script;
 
 public partial class Smoothing : Node3D
 {
@@ -18,8 +17,6 @@ public partial class Smoothing : Node3D
         Engine.PhysicsJitterFix = 0.0;
         _oldPosition = Position;
     }
-
-    private const float FollowSpeed = 25.0f;
 
     private bool _enabled = true;
     private bool _ySmoothing = true;
