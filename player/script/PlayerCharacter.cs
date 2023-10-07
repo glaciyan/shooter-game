@@ -78,16 +78,13 @@ public partial class PlayerCharacter : CharacterBody3D
     [ExportSubgroup("")]
     [ExportGroup("Crouching")]
     [Export]
-    public Shape3D CrouchShape;
-
-    [Export]
     public float MaxSpeedCrouching = 3.0f;
 
     [Export]
     public float StandingHeight = 1.8f;
 
     [Export]
-    public float CrouchingHeight = 0.8f;
+    public float CrouchingHeight = 1.2f;
 
     [ExportGroup("Camera")]
     [Export(PropertyHint.Range, "0.1, 10, 0.1")]
@@ -116,9 +113,9 @@ public partial class PlayerCharacter : CharacterBody3D
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private bool _isControlling;
     private const float FloorMaxAngleThreshold = 0.01f;
-    private Shape3D _standingShape;
     private float _maxSpeed;
     private MovementState _state;
+    private Vector3 _cameraPosition;
 
     private Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
@@ -127,17 +124,19 @@ public partial class PlayerCharacter : CharacterBody3D
 
     // Nodes
     private CameraController _cameraController;
-    private CollisionShape3D _collisionShape;
+    private CollisionShape3D _standingCollision;
+    private CollisionShape3D _crouchingCollision;
     private ShapeCast3D _shapeCast = new();
 
     public override void _Ready()
     {
         _maxSpeed = MaxSpeedWalking;
         _cameraController = GetNode<CameraController>("%CameraController");
-        _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
-        _standingShape = (Shape3D)_collisionShape.Shape.Duplicate();
+        _cameraPosition = _cameraController.Position;
+        _standingCollision = GetNode<CollisionShape3D>("StandingCollision");
+        _crouchingCollision = GetNode<CollisionShape3D>("CrouchingCollision");
 
-        _shapeCast.Shape = _collisionShape.Shape;
+        _shapeCast.Shape = _standingCollision.Shape;
         _shapeCast.DebugShapeCustomColor = new Color(Colors.Aqua);
         AddChild(_shapeCast);
 
@@ -195,7 +194,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
-        Crouch();
+        Crouch((float)delta);
 
         Velocity = Movement(delta, Gravity(delta, Jump(Velocity)));
 
@@ -220,28 +219,69 @@ public partial class PlayerCharacter : CharacterBody3D
             }
         }
     }
+
+
+    private Vector3 _cameraOffsetCrouching = Vector3.Zero;
     
-    private void Crouch()
+    private Vector3 CameraOffsetCrouching
+    {
+        get => _cameraOffsetCrouching;
+        set
+        {
+            _cameraOffsetCrouching = value;
+            _cameraController.Position = _cameraPosition + _cameraOffsetCrouching;
+        }
+    }
+
+    private bool _crouchJumped;
+    private const float CrouchLerpFollowSpeed = 6f;
+    
+    private void Crouch(float delta)
     {
         // when isSprinting is true, could do a slide
         if (Input.IsActionPressed("crouch"))
         {
-            ChangeShape(CrouchShape);
+            var diff = CrouchingHeight - StandingHeight;
+            var oldCameraOffset = CameraOffsetCrouching;
+            CameraOffsetCrouching = CameraOffsetCrouching.Lerp(Vector3.Up * diff, delta * CrouchLerpFollowSpeed);
+
+            if (oldCameraOffset.Y - CameraOffsetCrouching.Y > 1.0e-2f) return;
+            
+            ChangeCastShape(_crouchingCollision.Shape);
+            _standingCollision.Disabled = true;
+            _crouchingCollision.Disabled = false;
+
+            if (!_crouchJumped && !IsOnFloor())
+            {
+                Velocity += Vector3.Up * -diff / 2.5f * JumpForceN / MassKg;
+                _crouchJumped = true;
+            }
+
+            _state = MovementState.Crouching;
         }
-        else if (_collisionShape.Shape == CrouchShape)
+        else if (_standingCollision.Disabled)
         {
-            ChangeShape(_standingShape);
-            _collisionShape.Position = Vector3.Zero;
+            ChangeCastShape(_standingCollision.Shape);
+            _standingCollision.Disabled = false;
+            _crouchingCollision.Disabled = true;
+
+            _crouchJumped = false;
+            
             _state = MovementState.Walking;
             // when player is uncrouching they are stuck in the ground, teleport up a little
-            var missingHeight = (StandingHeight - CrouchingHeight) / 2;
-            var collision = ShootShapeCast(Vector3.Zero, new Vector3(0, -missingHeight, 0));
-            if (collision.IsColliding())
-            {
-                var gp = GlobalPosition;
-                GlobalPosition = new Vector3(gp.X,
-                    gp.Y + missingHeight * (1.0f - collision.GetClosestCollisionSafeFraction()), gp.Z);
-            }
+            // var missingHeight = (StandingHeight - CrouchingHeight) / 2;
+            // var collision = ShootShapeCast(Vector3.Zero, new Vector3(0, -missingHeight, 0));
+            // if (collision.IsColliding())
+            // {
+            //     var gp = GlobalPosition;
+            //     GlobalPosition = new Vector3(gp.X,
+            //         gp.Y + missingHeight * (1.0f - collision.GetClosestCollisionSafeFraction()), gp.Z);
+            // }
+        }
+
+        if (_crouchingCollision.Disabled)
+        {
+            CameraOffsetCrouching = CameraOffsetCrouching.Lerp(Vector3.Zero, delta * CrouchLerpFollowSpeed);
         }
     }
 
@@ -601,9 +641,8 @@ public partial class PlayerCharacter : CharacterBody3D
         return velocity;
     }
 
-    private void ChangeShape(Shape3D shape)
+    private void ChangeCastShape(Shape3D shape)
     {
-        _collisionShape.SetDeferred("shape", shape);
         _shapeCast.SetDeferred("shape", shape);
     }
 }
