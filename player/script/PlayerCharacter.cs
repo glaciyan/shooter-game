@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using Godot;
 using shootergame.bullet;
 
@@ -12,7 +11,7 @@ public partial class PlayerCharacter : CharacterBody3D
     public float MaxSpeedWalking = 5.0f;
 
     [Export]
-    public float MaxAcceleration = 40f;
+    public float MaxAcceleration = 45f;
 
     [Export]
     public float MovementForce = 2700.0f;
@@ -151,6 +150,11 @@ public partial class PlayerCharacter : CharacterBody3D
             _viewPoint.Y = (float)Math.Clamp(_viewPoint.Y, -Math.PI / 2, Math.PI / 2);
 
             _cameraController.RotateTo(_viewPoint);
+
+            var transform = Transform;
+            transform.Basis = Basis.Identity;
+            Transform = transform;
+            RotateObjectLocal(Vector3.Up, -_viewPoint.X);
         }
 
         if (@event.IsActionPressed("shoot"))
@@ -163,7 +167,8 @@ public partial class PlayerCharacter : CharacterBody3D
     {
         var graph = DebugDraw2D.GetGraph("speed") ?? DebugDraw2D.CreateGraph("speed");
         graph.BufferSize = 1000;
-        DebugDraw2D.GraphUpdateData("speed", Velocity.Length());
+        DebugDraw2D.GraphUpdateData("speed", Velocity.ToVector2Flat().Length());
+
         DebugDraw2D.SetText("OnFloor", IsOnFloor());
         DebugDraw2D.SetText("OnWall", IsOnWall());
         DebugDraw2D.SetText("IsSupported", IsSupported());
@@ -208,11 +213,13 @@ public partial class PlayerCharacter : CharacterBody3D
         {
             ChangeShape(CrouchShape);
             _maxSpeed = CrouchMaxVelocity;
+            _isCrouching = true;
         }
         else if (_collisionShape.Shape == CrouchShape)
         {
             ChangeShape(_standingShape);
             _maxSpeed = MaxSpeedWalking;
+            _isCrouching = false;
             // when player is uncrouching they are stuck in the ground, teleport up a little
             var missingHeight = (StandingHeight - CrouchingHeight) / 2;
             var collision = ShootShapeCast(Vector3.Zero, new Vector3(0, -missingHeight, 0));
@@ -484,42 +491,52 @@ public partial class PlayerCharacter : CharacterBody3D
 
     // -y is forward, +x is right
     private Vector2 _velocity = Vector2.Zero;
+    private bool _isCrouching;
 
     private Vector3 Movement(double delta, Vector3 velocity)
     {
+        var additive = false;
         var inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
 
         var sidewaysInput = SidewaysVector * inputDir.X;
         var forwardInput = ForwardVector * inputDir.Y;
-        if (!IsOnFloor())
-        {
-            forwardInput *= AirSpeedControl;
-            sidewaysInput *= AirStrafeControl;
-        }
 
-        var input = (forwardInput + sidewaysInput).FastLimit().ToVector3Flat();
+        var input = (forwardInput + sidewaysInput).FastLimit();
 
-        // var vel = velocity.ToVector2Flat().RotateToBasis(ForwardVector);
-        // GD.Print(vel);
-        //
-        // var debug = new Vector2(0f, -1f).RotateToBasis(ForwardVector);
-        // DebugDraw3D.DrawRay(GlobalPosition, debug.ToVector3Flat(), debug.Length(), Colors.Red, 0.1f);
-        // debug -= ForwardVector * 10;
-        // DebugDraw3D.DrawRay(GlobalPosition, debug.ToVector3Flat(), debug.Length(), Colors.Blue, 0.1f);
-        // var inverse = debug.InvertRotationToBasis(ForwardVector);
-        // DebugDraw3D.DrawRay(GlobalPosition, inverse.ToVector3Flat(), inverse.Length(), Colors.Red, 0.1f);
-
+        
+        // how fast we want to go according to our input
         var desiredVelocity = input * _maxSpeed;
-        var maxSpeedChange = MaxAcceleration * (float)delta;
+        
+        // how fast we are going
+        var flatVelocity = velocity.ToVector2Flat();
 
-        // set forward to desired
+        // how much can we change the velocity
+        var maxSpeedChange = (MovementForce - Friction) / MassKg * (float)delta;
 
-
-        var balance = Mathf.IsZeroApprox(input.LengthSquared()) ? Velocity.Normalized() : input;
-        velocity.X = Mathf.MoveToward(velocity.X, desiredVelocity.X, Math.Abs(maxSpeedChange * balance.X));
-        velocity.Z = Mathf.MoveToward(velocity.Z, desiredVelocity.Z, Math.Abs(maxSpeedChange * balance.Z));
-
-        return velocity;
+        // set friction if no input
+        if (input.IsZeroApprox())
+        {
+            maxSpeedChange = Friction * (float)delta;
+            if (!IsOnFloor()) maxSpeedChange *= AirFrictionFactor;
+        } else if (!IsOnFloor())
+        {
+            maxSpeedChange *= AirSpeedControl;
+            additive = _isCrouching;
+        }
+        
+        var moved = flatVelocity.MoveToward(desiredVelocity, maxSpeedChange);
+        
+        if (additive)
+        {
+            // take the max
+            flatVelocity = moved.LengthSquared() < flatVelocity.LengthSquared() ? flatVelocity : moved;
+        }
+        else
+        {
+            flatVelocity = moved;
+        }
+        
+        return flatVelocity.ToVector3Flat(velocity.Y);
     }
 
     private Vector3 Gravity(double delta, Vector3 velocity)
