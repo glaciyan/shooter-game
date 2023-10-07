@@ -189,7 +189,19 @@ public partial class PlayerCharacter : CharacterBody3D
         DebugDraw2D.SetText("OnFloor", IsOnFloor());
         DebugDraw2D.SetText("OnWall", IsOnWall());
         DebugDraw2D.SetText("IsSupported", IsSupported());
-        DebugDraw2D.SetText("Sprinting", _state.ToString());
+        DebugDraw2D.SetText("Movement", _state.ToString());
+
+        // visually move the camera when crouching
+        if (_state == MovementState.Crouching)
+        {
+            var diff = CrouchingHeight - StandingHeight;
+            CameraOffsetCrouching = CameraOffsetCrouching.Lerp(Vector3.Up * diff, (float)delta * CrouchLerpFollowSpeed);
+        }
+        else
+        {
+            // move back up when we are standing
+            CameraOffsetCrouching = CameraOffsetCrouching.Lerp(Vector3.Zero, (float)delta * CrouchLerpFollowSpeed);
+        }
     }
 
     public override void _PhysicsProcess(double delta)
@@ -222,7 +234,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
 
     private Vector3 _cameraOffsetCrouching = Vector3.Zero;
-    
+
     private Vector3 CameraOffsetCrouching
     {
         get => _cameraOffsetCrouching;
@@ -235,54 +247,58 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private bool _crouchJumped;
     private const float CrouchLerpFollowSpeed = 6f;
-    
+
     private void Crouch(float delta)
     {
-        // when isSprinting is true, could do a slide
         if (Input.IsActionPressed("crouch"))
         {
             var diff = CrouchingHeight - StandingHeight;
-            var oldCameraOffset = CameraOffsetCrouching;
-            CameraOffsetCrouching = CameraOffsetCrouching.Lerp(Vector3.Up * diff, delta * CrouchLerpFollowSpeed);
 
-            if (oldCameraOffset.Y - CameraOffsetCrouching.Y > 1.0e-2f) return;
-            
-            ChangeCastShape(_crouchingCollision.Shape);
-            _standingCollision.Disabled = true;
-            _crouchingCollision.Disabled = false;
-
-            if (!_crouchJumped && !IsOnFloor())
+            if (!_crouchJumped)
             {
-                Velocity += Vector3.Up * -diff / 2.5f * JumpForceN / MassKg;
+                if (!IsOnFloor()) Velocity += Vector3.Up * -diff / 2.5f * JumpForceN / MassKg;
                 _crouchJumped = true;
             }
 
             _state = MovementState.Crouching;
+
+            // only change collision shape after we are down
+            GD.Print(diff - CameraOffsetCrouching.Y);
+            if (Mathf.Abs(CameraOffsetCrouching.Y - diff) > 0.2f) return;
+            ChangeCastShape(_crouchingCollision.Shape);
+            _standingCollision.Disabled = true;
+            _crouchingCollision.Disabled = false;
         }
-        else if (_standingCollision.Disabled)
+        else if (CanUncrouch())
         {
             ChangeCastShape(_standingCollision.Shape);
             _standingCollision.Disabled = false;
             _crouchingCollision.Disabled = true;
-
-            _crouchJumped = false;
-            
             _state = MovementState.Walking;
-            // when player is uncrouching they are stuck in the ground, teleport up a little
-            // var missingHeight = (StandingHeight - CrouchingHeight) / 2;
-            // var collision = ShootShapeCast(Vector3.Zero, new Vector3(0, -missingHeight, 0));
-            // if (collision.IsColliding())
-            // {
-            //     var gp = GlobalPosition;
-            //     GlobalPosition = new Vector3(gp.X,
-            //         gp.Y + missingHeight * (1.0f - collision.GetClosestCollisionSafeFraction()), gp.Z);
-            // }
         }
+        // when isSprinting is true, could do a slide
 
-        if (_crouchingCollision.Disabled)
+        if (_state == MovementState.Walking)
         {
+            // move back up when we are standing
             CameraOffsetCrouching = CameraOffsetCrouching.Lerp(Vector3.Zero, delta * CrouchLerpFollowSpeed);
+
+            // and reset the crouch jump
+            if (IsOnFloor())
+            {
+                _crouchJumped = false;
+            }
         }
+    }
+
+    private bool CanUncrouch()
+    {
+        var oldShape = _shapeCast.Shape;
+        ChangeCastShape(_standingCollision.Shape);
+        var collision = ShootShapeCast(Vector3.Zero, Vector3.Zero);
+        var hit = collision?.IsColliding() ?? false;
+        GD.Print(hit);
+        return !hit;
     }
 
     private void DoWalkStairs(double delta, Vector3 desiredVelocity, Vector3 oldPosition)

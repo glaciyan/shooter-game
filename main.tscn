@@ -166,6 +166,11 @@ transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, -5
 use_collision = true
 material = SubResource("StandardMaterial3D_clqsw")
 
+[node name="CSGBox3D10" type="CSGBox3D" parent="WorldGeometry/Boxes"]
+transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, -5.22475, 2.21377, 0.146148)
+use_collision = true
+material = SubResource("StandardMaterial3D_clqsw")
+
 [node name="CSGBox3D4" type="CSGBox3D" parent="WorldGeometry/Boxes"]
 transform = Transform3D(0.91522, 0, 0.402954, 0, 1, 0, -0.402954, 0, 0.91522, 0.804025, 1.50049, -1.93265)
 use_collision = true
