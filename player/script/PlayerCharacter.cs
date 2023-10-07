@@ -118,7 +118,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private const float FloorMaxAngleThreshold = 0.01f;
     private Shape3D _standingShape;
     private float _maxSpeed;
-    private MovementState state;
+    private MovementState _state;
 
     private Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
@@ -173,11 +173,11 @@ public partial class PlayerCharacter : CharacterBody3D
 
         if (@event.IsActionPressed("sprint"))
         {
-            state = MovementState.Sprinting;
+            _state = MovementState.Sprinting;
         }
         else if (@event.IsActionReleased("sprint"))
         {
-            state = MovementState.Walking;
+            _state = MovementState.Walking;
         }
     }
 
@@ -190,7 +190,7 @@ public partial class PlayerCharacter : CharacterBody3D
         DebugDraw2D.SetText("OnFloor", IsOnFloor());
         DebugDraw2D.SetText("OnWall", IsOnWall());
         DebugDraw2D.SetText("IsSupported", IsSupported());
-        DebugDraw2D.SetText("Sprinting", state.ToString());
+        DebugDraw2D.SetText("Sprinting", _state.ToString());
     }
 
     public override void _PhysicsProcess(double delta)
@@ -220,19 +220,19 @@ public partial class PlayerCharacter : CharacterBody3D
             }
         }
     }
-
+    
     private void Crouch()
     {
         // when isSprinting is true, could do a slide
         if (Input.IsActionPressed("crouch"))
         {
             ChangeShape(CrouchShape);
-            state = MovementState.Crouching;
         }
         else if (_collisionShape.Shape == CrouchShape)
         {
             ChangeShape(_standingShape);
-            state = MovementState.Walking;
+            _collisionShape.Position = Vector3.Zero;
+            _state = MovementState.Walking;
             // when player is uncrouching they are stuck in the ground, teleport up a little
             var missingHeight = (StandingHeight - CrouchingHeight) / 2;
             var collision = ShootShapeCast(Vector3.Zero, new Vector3(0, -missingHeight, 0));
@@ -505,7 +505,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private Vector3 Movement(double delta, Vector3 velocity)
     {
-        if (state != MovementState.Crouching && Input.IsActionPressed("sprint")) state = MovementState.Sprinting;
+        if (_state != MovementState.Crouching && Input.IsActionPressed("sprint")) _state = MovementState.Sprinting;
 
 
         var additive = false;
@@ -514,7 +514,7 @@ public partial class PlayerCharacter : CharacterBody3D
         var sidewaysInput = SidewaysVector * inputDir.X;
         var forwardInput = ForwardVector * inputDir.Y;
 
-        switch (state)
+        switch (_state)
         {
             case MovementState.Walking:
                 _maxSpeed = MaxSpeedWalking;
@@ -530,7 +530,8 @@ public partial class PlayerCharacter : CharacterBody3D
                 break;
         }
 
-        if (state == MovementState.Sprinting)
+        var realSprinting = false;
+        if (_state == MovementState.Sprinting)
         {
             if (forwardInput.IsZeroApprox())
             {
@@ -538,11 +539,13 @@ public partial class PlayerCharacter : CharacterBody3D
             }
             else
             {
+                realSprinting = true;
                 sidewaysInput *= 0.2f;
             }
         }
 
-        var input = (forwardInput + sidewaysInput).Normalized();
+        var input = forwardInput + sidewaysInput;
+        input = realSprinting ? input.Normalized() : input.FastLimit();
 
         // how fast we want to go according to our input
         var desiredVelocity = input * _maxSpeed;
@@ -562,7 +565,7 @@ public partial class PlayerCharacter : CharacterBody3D
         else if (!IsOnFloor())
         {
             maxSpeedChange *= AirSpeedControl;
-            additive = state == MovementState.Crouching;
+            additive = _state == MovementState.Crouching;
         }
 
         var moved = flatVelocity.MoveToward(desiredVelocity, maxSpeedChange);
