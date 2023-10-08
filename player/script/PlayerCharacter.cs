@@ -296,8 +296,10 @@ public partial class PlayerCharacter : CharacterBody3D
     private bool CanUncrouch()
     {
         var oldShape = _shapeCast.Shape;
+        var oldShapeOffset = _shapeCastOffset;
         ChangeCastShape(_standingCollision.Shape);
         var collision = ShootShapeCast(Vector3.Zero, Vector3.Zero);
+        ChangeCastShape(oldShape, oldShapeOffset);
         var hit = collision?.IsColliding() ?? false;
         return !hit;
     }
