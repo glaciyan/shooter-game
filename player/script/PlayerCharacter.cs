@@ -85,6 +85,9 @@ public partial class PlayerCharacter : CharacterBody3D
 
     [Export]
     public float CrouchingHeight = 1.2f;
+    
+    [Export]
+    public Vector3 CrouchShapeOffset = new(0, -0.3f, 0);
 
     [ExportGroup("Camera")]
     [Export(PropertyHint.Range, "0.1, 10, 0.1")]
@@ -116,6 +119,8 @@ public partial class PlayerCharacter : CharacterBody3D
     private float _maxSpeed;
     private MovementState _state;
     private Vector3 _cameraPosition;
+    private bool _crouchJumped;
+    private const float CrouchLerpFollowSpeed = 6f;
 
     private Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
@@ -245,9 +250,6 @@ public partial class PlayerCharacter : CharacterBody3D
         }
     }
 
-    private bool _crouchJumped;
-    private const float CrouchLerpFollowSpeed = 6f;
-    private Vector3 _crouchShapeOffset = new(0, -0.3f, 0);
 
     private void Crouch(float delta)
     {
@@ -266,7 +268,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
             // only change collision shape after we are down
             if (Mathf.Abs(CameraOffsetCrouching.Y - diff) > 0.2f) return;
-            ChangeCastShape(_crouchingCollision.Shape, _crouchShapeOffset);
+            ChangeCastShape(_crouchingCollision.Shape, CrouchShapeOffset);
             _standingCollision.Disabled = true;
             _crouchingCollision.Disabled = false;
         }
