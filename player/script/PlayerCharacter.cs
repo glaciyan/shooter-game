@@ -251,6 +251,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private void Crouch(float delta)
     {
+        // when isSprinting is true, could do a slide
         if (Input.IsActionPressed("crouch"))
         {
             var diff = CrouchingHeight - StandingHeight;
@@ -276,7 +277,6 @@ public partial class PlayerCharacter : CharacterBody3D
             _crouchingCollision.Disabled = true;
             _state = MovementState.Walking;
         }
-        // when isSprinting is true, could do a slide
 
         if (_state == MovementState.Walking)
         {
@@ -430,7 +430,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
             gp = GlobalPosition;
             GlobalPosition = upPosition;
-            MoveAndCollide(stepForwardTest); // TODO value might be incorrect
+            MoveAndCollide(stepForwardTest);
             var testPosition = GlobalPosition;
             GlobalPosition = gp;
 
