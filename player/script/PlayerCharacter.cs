@@ -247,6 +247,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private bool _crouchJumped;
     private const float CrouchLerpFollowSpeed = 6f;
+    private Vector3 _crouchShapeOffset = new(0, -0.3f, 0);
 
     private void Crouch(float delta)
     {
@@ -263,9 +264,8 @@ public partial class PlayerCharacter : CharacterBody3D
             _state = MovementState.Crouching;
 
             // only change collision shape after we are down
-            GD.Print(diff - CameraOffsetCrouching.Y);
             if (Mathf.Abs(CameraOffsetCrouching.Y - diff) > 0.2f) return;
-            ChangeCastShape(_crouchingCollision.Shape);
+            ChangeCastShape(_crouchingCollision.Shape, _crouchShapeOffset);
             _standingCollision.Disabled = true;
             _crouchingCollision.Disabled = false;
         }
@@ -297,7 +297,6 @@ public partial class PlayerCharacter : CharacterBody3D
         ChangeCastShape(_standingCollision.Shape);
         var collision = ShootShapeCast(Vector3.Zero, Vector3.Zero);
         var hit = collision?.IsColliding() ?? false;
-        GD.Print(hit);
         return !hit;
     }
 
@@ -517,10 +516,12 @@ public partial class PlayerCharacter : CharacterBody3D
 
         return true;
     }
+    
+    private Vector3 _shapeCastOffset = Vector3.Zero;
 
     private ShapeCast3D ShootShapeCastGlobal(Vector3 from, Vector3 target)
     {
-        _shapeCast.GlobalPosition = from;
+        _shapeCast.GlobalPosition = from + _shapeCastOffset;
         _shapeCast.TargetPosition = target;
         _shapeCast.ForceShapecastUpdate();
         // DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
@@ -530,7 +531,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private ShapeCast3D ShootShapeCast(Vector3 from, Vector3 target)
     {
-        _shapeCast.Position = from;
+        _shapeCast.Position = from + _shapeCastOffset;
         _shapeCast.TargetPosition = target;
         _shapeCast.ForceShapecastUpdate();
         // DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
@@ -657,8 +658,9 @@ public partial class PlayerCharacter : CharacterBody3D
         return velocity;
     }
 
-    private void ChangeCastShape(Shape3D shape)
+    private void ChangeCastShape(Shape3D shape, Vector3? offset = null)
     {
         _shapeCast.SetDeferred("shape", shape);
+        _shapeCastOffset = offset ?? Vector3.Zero;
     }
 }
