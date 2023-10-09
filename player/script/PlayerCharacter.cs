@@ -118,10 +118,10 @@ public partial class PlayerCharacter : CharacterBody3D
     private bool _crouchJumped;
     private const float CrouchLerpFollowSpeed = 6f;
 
-    private Vector3 AimVector =>
+    public Vector3 AimVector =>
         Vector3.Forward.Rotated(Vector3.Right, -_viewPoint.Y).Rotated(Vector3.Up, -_viewPoint.X);
 
-    private Vector3 AimOrigin => _cameraController.GlobalPosition;
+    public Vector3 AimOrigin => _cameraController.GlobalPosition;
 
     // Nodes
     private CameraController _cameraController;

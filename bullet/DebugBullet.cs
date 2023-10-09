@@ -2,7 +2,7 @@ using Godot;
 
 namespace shootergame.bullet;
 
-public partial class Bullet : Node3D
+public partial class DebugBullet : Node3D
 {
     [Export]
     public float Range = 50.0f;

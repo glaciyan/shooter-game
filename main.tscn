@@ -1,6 +1,6 @@
 [gd_scene load_steps=11 format=3 uid="uid://c6356ubeoiydj"]
 
-[ext_resource type="PackedScene" uid="uid://b3gr35vagtxy8" path="res://player/player-character.tscn" id="1_bfuh2"]
+[ext_resource type="PackedScene" uid="uid://b3gr35vagtxy8" path="res://player/player_character.tscn" id="1_bfuh2"]
 [ext_resource type="Script" path="res://main.gd" id="1_ibyna"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_72qq7"]
@@ -15,6 +15,7 @@ sky_material = SubResource("ProceduralSkyMaterial_72qq7")
 background_mode = 2
 sky = SubResource("Sky_6kt2i")
 tonemap_mode = 2
+sdfgi_enabled = true
 glow_enabled = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2qb2x"]
