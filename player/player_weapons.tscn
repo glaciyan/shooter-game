@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://4k0vdo2eb3tv"]
 
-[ext_resource type="Script" path="res://player/script/CharacterWeapons.cs" id="1_2jpo1"]
+[ext_resource type="Script" path="res://player/script/PlayerWeapons.cs" id="1_o8y0x"]
 [ext_resource type="PackedScene" uid="uid://br3kh5uy48act" path="res://item/weapon/rifle/rifle.tscn" id="4_bi08k"]
 [ext_resource type="PackedScene" uid="uid://bfqkrwlvjqof6" path="res://item/weapon/pistol/pistol.tscn" id="5_ndt5f"]
 
@@ -11,8 +11,8 @@ material = SubResource("StandardMaterial3D_i6ngc")
 radius = 0.1
 height = 0.3
 
-[node name="CharacterWeapons" type="Node3D" node_paths=PackedStringArray("CurrentWeapon", "Loadout")]
-script = ExtResource("1_2jpo1")
+[node name="PlayerWeapons" type="Node3D" node_paths=PackedStringArray("CurrentWeapon", "Loadout")]
+script = ExtResource("1_o8y0x")
 CurrentWeapon = NodePath("TempHands/PistolPosition/Pistol")
 Loadout = [NodePath("TempHands/RiflePosition/Rifle"), NodePath("TempHands/PistolPosition/Pistol")]
 Pistol = ExtResource("5_ndt5f")

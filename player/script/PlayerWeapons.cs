@@ -4,7 +4,7 @@ using shootergame.item.weapon;
 
 namespace shootergame.player.script;
 
-public partial class CharacterWeapons : Node3D
+public partial class PlayerWeapons : Node3D
 {
     [Export]
     public PlayerCharacter Player;
