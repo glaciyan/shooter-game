@@ -93,10 +93,6 @@ public partial class PlayerCharacter : CharacterBody3D
     [Export(PropertyHint.Range, "0.1, 10, 0.1")]
     public float LookaroundSpeed = 1.0f;
 
-    [ExportGroup("Shooting")]
-    [Export]
-    public PackedScene Bullet;
-
     // public vars
 
     // private vars
@@ -168,11 +164,6 @@ public partial class PlayerCharacter : CharacterBody3D
             _viewPoint.Y = (float)Math.Clamp(_viewPoint.Y, -Math.PI / 2, Math.PI / 2);
 
             _cameraController.RotateTo(_viewPoint);
-        }
-
-        if (@event.IsActionPressed("shoot"))
-        {
-            ShootDebugLaser();
         }
 
         if (@event.IsActionPressed("sprint"))
@@ -554,15 +545,6 @@ public partial class PlayerCharacter : CharacterBody3D
         Input.MouseMode = Input.MouseModeEnum.Visible;
         _isControlling = false;
     }
-
-    private void ShootDebugLaser()
-    {
-        var bullet = Bullet.Instantiate<Bullet>();
-        AddChild(bullet);
-        bullet.Shoot(AimOrigin, AimVector);
-        GD.Print("pew");
-    }
-
 
     private Vector3 Movement(double delta, Vector3 velocity)
     {
