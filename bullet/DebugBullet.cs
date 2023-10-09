@@ -32,7 +32,7 @@ public partial class DebugBullet : Node3D
         var result = spaceState.IntersectRay(query);
         if (result.TryGetValue("position", out var res))
         {
-            DebugDraw3D.DrawLineHit(GlobalPosition, _direction * Range, res.AsVector3(), true, 0.25f, Colors.Red,
+            DebugDraw3D.DrawLineHit(GlobalPosition, _direction * Range, res.AsVector3(), true, 0.1f, Colors.Red,
                 Colors.Green, 5.0f);
         }
 
