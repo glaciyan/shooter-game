@@ -8,7 +8,7 @@ public partial class CharacterWeapons : Node3D
 {
     [Export]
     public PlayerCharacter Player;
-    
+
     [Export]
     public ShootingWeapon CurrentWeapon;
 
@@ -21,19 +21,22 @@ public partial class CharacterWeapons : Node3D
 
     [Export]
     public PackedScene Rifle;
-    
+
     public override void _Input(InputEvent @event)
     {
         if (@event.IsActionPressed("shoot"))
         {
             CurrentWeapon.Shoot(Player.AimOrigin, Player.AimVector);
-        } else if (@event.IsActionPressed("reload"))
+        }
+        else if (@event.IsActionPressed("reload"))
         {
             CurrentWeapon.Reload();
-        } else if (@event.IsActionPressed("slot_0"))
+        }
+        else if (@event.IsActionPressed("slot_0"))
         {
             SwitchWeapon(0);
-        } else if (@event.IsActionPressed("slot_1"))
+        }
+        else if (@event.IsActionPressed("slot_1"))
         {
             SwitchWeapon(1);
         }
