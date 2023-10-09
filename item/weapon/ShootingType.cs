@@ -1,4 +1,4 @@
-﻿namespace shootergame.weapon;
+﻿namespace shootergame.item.weapon;
 
 /// <summary>
 /// What kind of behaviour a weapon should have when shoot is held.
