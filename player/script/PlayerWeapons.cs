@@ -24,11 +24,7 @@ public partial class PlayerWeapons : Node3D
 
     public override void _Input(InputEvent @event)
     {
-        if (@event.IsActionPressed("shoot"))
-        {
-            CurrentWeapon.Shoot(Player.AimOrigin, Player.AimVector);
-        }
-        else if (@event.IsActionPressed("reload"))
+        if (@event.IsActionPressed("reload"))
         {
             CurrentWeapon.Reload();
         }
@@ -39,6 +35,18 @@ public partial class PlayerWeapons : Node3D
         else if (@event.IsActionPressed("slot_1"))
         {
             SwitchWeapon(1);
+        }
+    }
+
+    public override void _Process(double delta)
+    {
+        if (Input.IsActionPressed("shoot"))
+        {
+            CurrentWeapon.RequestShooting(Player);
+        }
+        else
+        {
+            CurrentWeapon.StopShooting();
         }
     }
 

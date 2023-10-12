@@ -54,6 +54,7 @@ material = SubResource("StandardMaterial3D_2qb2x")
 
 [node name="RampedStairs" type="CSGCombiner3D" parent="WorldGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08014, 0.153916, 11.0935)
+use_collision = true
 
 [node name="CSGBox3D7" type="CSGBox3D" parent="WorldGeometry/RampedStairs"]
 use_collision = true
@@ -116,6 +117,7 @@ material = SubResource("StandardMaterial3D_clqsw")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="WorldGeometry/RampedStairs"]
 transform = Transform3D(0.466186, 0.884687, 0, -0.884687, 0.466186, 0, 0, 0, 1, 0, 0.21202, 0.9038)
+collision_layer = 32
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="WorldGeometry/RampedStairs/StaticBody3D"]
 shape = SubResource("BoxShape3D_07e4w")

@@ -13,8 +13,8 @@ height = 0.3
 
 [node name="PlayerWeapons" type="Node3D" node_paths=PackedStringArray("CurrentWeapon", "Loadout")]
 script = ExtResource("1_o8y0x")
-CurrentWeapon = NodePath("TempHands/PistolPosition/Pistol")
-Loadout = [NodePath("TempHands/RiflePosition/Rifle"), NodePath("TempHands/PistolPosition/Pistol")]
+CurrentWeapon = NodePath("TempHands/Pistol")
+Loadout = [NodePath("TempHands/Rifle"), NodePath("TempHands/Pistol")]
 Pistol = ExtResource("5_ndt5f")
 Rifle = ExtResource("4_bi08k")
 
@@ -24,15 +24,13 @@ layers = 2
 mesh = SubResource("CapsuleMesh_s0kbu")
 skeleton = NodePath("../..")
 
-[node name="RiflePosition" type="Marker3D" parent="TempHands"]
+[node name="Rifle" parent="TempHands" instance=ExtResource("4_bi08k")]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -0.362354, 0.11346)
-
-[node name="Rifle" parent="TempHands/RiflePosition" instance=ExtResource("4_bi08k")]
 visible = false
-skeleton = NodePath("../../..")
+skeleton = NodePath("../..")
+MagazineCapacity = 30
+ShootingType = 1
 
-[node name="PistolPosition" type="Marker3D" parent="TempHands"]
+[node name="Pistol" parent="TempHands" instance=ExtResource("5_ndt5f")]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -0.221276, -0.072145)
-
-[node name="Pistol" parent="TempHands/PistolPosition" instance=ExtResource("5_ndt5f")]
-skeleton = NodePath("../../..")
+skeleton = NodePath("../..")

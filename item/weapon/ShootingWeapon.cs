@@ -1,12 +1,13 @@
 using Godot;
 using shootergame.bullet;
+using shootergame.player.script;
 
 namespace shootergame.item.weapon;
 
 public abstract partial class ShootingWeapon : Weapon
 {
     [Export]
-    public int MagazineSize = 12;
+    public int MagazineCapacity = 12;
 
     [Export]
     public PackedScene Bullet;
@@ -14,29 +15,77 @@ public abstract partial class ShootingWeapon : Weapon
     [Export]
     public ShootingType ShootingType;
 
-    protected int MagazineBullets;
+    [Export]
+    public double FireRateRpm = 60;
+
+    private Timer _fireRateTimer;
+    private bool _onCooldown;
+    protected Magazine Magazine;
 
     public override void _Ready()
     {
-        MagazineBullets = MagazineSize;
+        Magazine = new Magazine(MagazineCapacity);
+
+        _fireRateTimer = new Timer()
+        {
+            OneShot = true,
+            Autostart = false,
+            WaitTime = 60.0 / FireRateRpm,
+        };
+
+        _fireRateTimer.Timeout += () =>
+        {
+            _onCooldown = false;
+            if (ShootingType == ShootingType.Auto)
+            {
+                if (_requestShoot) Shoot();
+            }
+        };
+        AddChild(_fireRateTimer);
     }
 
-    public virtual bool Shoot(Vector3 from, Vector3 direction)
+    private PlayerCharacter _currentPlayer;
+    private bool _requestShoot;
+
+    public virtual void RequestShooting(PlayerCharacter player)
     {
-        if (MagazineBullets-- > 0)
+        if (_requestShoot) return;
+        if (_onCooldown) return;
+
+        _currentPlayer = player;
+        _requestShoot = true;
+
+        Shoot();
+    }
+
+    public virtual void StopShooting()
+    {
+        _requestShoot = false;
+    }
+
+    protected virtual void Shoot()
+    {
+        if (Magazine.RemoveBullet())
         {
             var bullet = Bullet.Instantiate<DebugBullet>();
             AddChild(bullet);
-            bullet.Shoot(from, direction);
-            return true;
+            bullet.Shoot(_currentPlayer.AimOrigin, _currentPlayer.AimVector);
+            _onCooldown = true;
+            _fireRateTimer.Start();
         }
-
-        GD.Print("no bullets left");
-        return false;
+        else
+        {
+            OnNoAmmoShoot();
+        }
     }
 
     public virtual void Reload()
     {
-        MagazineBullets = MagazineSize;
+        Magazine.AddBullets(MagazineCapacity);
+    }
+
+    protected virtual void OnNoAmmoShoot()
+    {
+        // TODO clicking sound for weapon
     }
 }
