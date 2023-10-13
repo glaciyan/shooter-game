@@ -28,8 +28,6 @@ skeleton = NodePath("../..")
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -0.362354, 0.11346)
 visible = false
 skeleton = NodePath("../..")
-MagazineCapacity = 30
-ShootingType = 1
 
 [node name="Pistol" parent="TempHands" instance=ExtResource("5_ndt5f")]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -0.221276, -0.072145)
