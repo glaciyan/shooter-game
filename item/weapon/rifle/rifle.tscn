@@ -10,4 +10,7 @@ size = Vector3(0.14, 0.33, 0.85)
 layers = 2
 mesh = SubResource("BoxMesh_mbsqs")
 script = ExtResource("1_vc5ho")
+MagazineCapacity = 30
 Bullet = ExtResource("2_ck3u1")
+ShootingType = 1
+FireRateRpm = 800.0
