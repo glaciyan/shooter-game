@@ -5,7 +5,8 @@ public class Magazine
     public readonly int MaxCapacity;
 
     private int _bullets;
-    
+    public int Bullets => _bullets;
+
     public Magazine(int maxCapacity, bool filled = true)
     {
         MaxCapacity = maxCapacity;
