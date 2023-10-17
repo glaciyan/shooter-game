@@ -29,7 +29,7 @@ public partial class PlayerCharacter : CharacterBody3D
     public float MaxVelocity = 500f;
 
     [Export]
-    public float Friction = 20f;
+    public float Friction = 45f;
 
     [Export]
     public float GroundFriction = 1f;
@@ -100,7 +100,7 @@ public partial class PlayerCharacter : CharacterBody3D
     // private vars
     private Vector2 ForwardVector => Vector2.Down.Rotated(_viewPoint.X);
 
-    private Vector2 SidewaysVector
+    private Vector2 RightVector
     {
         get
         {
@@ -114,7 +114,7 @@ public partial class PlayerCharacter : CharacterBody3D
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private bool _isControlling;
     private const float FloorMaxAngleThreshold = 0.01f;
-    private float _maxSpeed;
+    private float _wishSpeed;
     private MovementState _state;
     private Vector3 _cameraPosition;
     private bool _crouchJumped;
@@ -133,7 +133,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     public override void _Ready()
     {
-        _maxSpeed = MaxSpeedWalking;
+        _wishSpeed = MaxSpeedWalking;
         _cameraController = GetNode<CameraController>("%CameraController");
         _cameraPosition = _cameraController.Position;
         _standingCollision = GetNode<CollisionShape3D>("StandingCollision");
@@ -548,20 +548,19 @@ public partial class PlayerCharacter : CharacterBody3D
         _isControlling = false;
     }
 
+    private float _oldWishSpeed;
+
     private Vector3 Movement(double delta, Vector3 velocity)
     {
         if (_state != MovementState.Crouching && Input.IsActionPressed("sprint")) _state = MovementState.Sprinting;
 
         var (sMove, fMove) = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
+        var movement = velocity.ToVector2Flat();
 
-        var onFloor = !(velocity.Y > 0);
+        var desiredDirection = (ForwardVector * fMove + RightVector * sMove).Normalized();
 
-        var sidewaysInput = SidewaysVector * sMove * (onFloor ? 1 : AirStrafeControl);
-        var forwardInput = ForwardVector * fMove * (onFloor ? 1 : AirSpeedControl);
-
-        var desiredDirection = (sidewaysInput + forwardInput).Normalized();
-
-        _maxSpeed = _state switch
+        _oldWishSpeed = _wishSpeed;
+        _wishSpeed = _state switch
         {
             MovementState.Walking => MaxSpeedWalking,
             MovementState.Crouching => MaxSpeedCrouching,
@@ -569,28 +568,49 @@ public partial class PlayerCharacter : CharacterBody3D
             _ => MaxSpeedWalking
         };
 
-        if (desiredDirection.IsZeroApprox())
+        if (_falling)
         {
-            // friction
+            // air movement
 
-            var friction = Friction * GroundFriction;
-
-            velocity = CheckVelocity(velocity);
-            velocity = velocity.MoveToward(Vector3.Zero, friction *(float)delta);
+            if (desiredDirection.IsZeroApprox())
+            {
+                // no input in air just apply regular air friction
+                var friction = Friction * AirFrictionFactor;
+                movement = movement.MoveToward(Vector2.Zero, friction * (float)delta);
+            }
+            else
+            {
+                // TODO Goals:
+                // 1. Should be able to control themself in the air with the air factors
+                // 2. Should not slow down based on _wishSpeed
+                // The only slowdown should be friction or player controlling mid air
+                GD.Print(movement.Dot(desiredDirection));
+            }
         }
         else
         {
-            // acceleration
+            // walking movement
 
-            var desiredVelocity = (desiredDirection * _maxSpeed).ToVector3Flat(velocity.Y);
-            var acceleration = MovementForce / MassKg * (float)delta;
+            if (desiredDirection.IsZeroApprox())
+            {
+                // no input apply friction
 
-            velocity = velocity.MoveToward(desiredVelocity, acceleration);
+                var friction = Friction * GroundFriction;
+                movement = movement.MoveToward(Vector2.Zero, friction * (float)delta);
+            }
+            else
+            {
+                // acceleration
 
-            velocity = CheckVelocity(velocity);
+                var desiredVelocity = desiredDirection * _wishSpeed;
+                var acceleration = MovementForce / MassKg * (float)delta;
+
+                movement = movement.MoveToward(desiredVelocity, acceleration);
+            }
         }
 
-        return velocity;
+
+        return movement.ToVector3Flat(velocity.Y);
     }
 
     private Vector3 CheckVelocity(Vector3 velocity)
@@ -600,20 +620,36 @@ public partial class PlayerCharacter : CharacterBody3D
         return velocity;
     }
 
+    private DateTime _lastLandedTime = DateTime.Now;
+    private bool _falling;
+
     private Vector3 Gravity(double delta, Vector3 velocity)
     {
         if (!IsOnFloor())
+        {
             velocity.Y -= _gravity * GravityMultiplier * (float)delta;
+            _falling = true;
+        }
+        else
+        {
+            if (_falling) _lastLandedTime = DateTime.Now;
+            _falling = false;
+        }
 
         velocity.Y = Math.Clamp(velocity.Y, -TerminalVelocity, float.MaxValue);
 
         return velocity;
     }
 
+    private DateTime _lastJumpTime = DateTime.Now;
+
     private Vector3 Jump(Vector3 velocity)
     {
         if (Input.IsActionJustPressed("jump") && IsOnFloor())
+        {
             velocity.Y = JumpForceN / MassKg;
+            _lastJumpTime = DateTime.Now;
+        }
 
         return velocity;
     }
