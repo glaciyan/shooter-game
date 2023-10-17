@@ -21,16 +21,19 @@ public partial class PlayerCharacter : CharacterBody3D
     public float MaxSpeedSprinting = 7.0f;
 
     [Export]
-    public float MaxAcceleration = 45f;
-
-    [Export]
     public float SprintInitialMaxAcceleration = 20f;
 
     [Export]
     public float MovementForce = 2700.0f;
 
     [Export]
-    public float Friction = 25.0f;
+    public float MaxVelocity = 500f;
+
+    [Export]
+    public float Friction = 20f;
+
+    [Export]
+    public float GroundFriction = 1f;
 
     [Export]
     public float MassKg = 60.0f;
@@ -85,7 +88,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     [Export]
     public float CrouchingHeight = 1.2f;
-    
+
     [Export]
     public Vector3 CrouchShapeOffset = new(0, -0.3f, 0);
 
@@ -511,7 +514,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
         return true;
     }
-    
+
     private Vector3 _shapeCastOffset = Vector3.Zero;
 
     private ShapeCast3D ShootShapeCastGlobal(Vector3 from, Vector3 target)
@@ -550,80 +553,51 @@ public partial class PlayerCharacter : CharacterBody3D
     {
         if (_state != MovementState.Crouching && Input.IsActionPressed("sprint")) _state = MovementState.Sprinting;
 
+        var (sMove, fMove) = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
 
-        var additive = false;
-        var inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
+        var onFloor = !(velocity.Y > 0);
 
-        var sidewaysInput = SidewaysVector * inputDir.X;
-        var forwardInput = ForwardVector * inputDir.Y;
+        var sidewaysInput = SidewaysVector * sMove * (onFloor ? 1 : AirStrafeControl);
+        var forwardInput = ForwardVector * fMove * (onFloor ? 1 : AirSpeedControl);
 
-        switch (_state)
+        var desiredDirection = (sidewaysInput + forwardInput).Normalized();
+
+        _maxSpeed = _state switch
         {
-            case MovementState.Walking:
-                _maxSpeed = MaxSpeedWalking;
-                break;
-            case MovementState.Crouching:
-                _maxSpeed = MaxSpeedCrouching;
-                break;
-            case MovementState.Sprinting:
-                _maxSpeed = MaxSpeedSprinting;
-                break;
-            default:
-                _maxSpeed = MaxSpeedWalking;
-                break;
-        }
+            MovementState.Walking => MaxSpeedWalking,
+            MovementState.Crouching => MaxSpeedCrouching,
+            MovementState.Sprinting => MaxSpeedSprinting,
+            _ => MaxSpeedWalking
+        };
 
-        var realSprinting = false;
-        if (_state == MovementState.Sprinting)
+        if (desiredDirection.IsZeroApprox())
         {
-            if (forwardInput.IsZeroApprox())
-            {
-                _maxSpeed = MaxSpeedWalking;
-            }
-            else
-            {
-                realSprinting = true;
-                sidewaysInput *= 0.2f;
-            }
-        }
+            // friction
 
-        var input = forwardInput + sidewaysInput;
-        input = realSprinting ? input.Normalized() : input.FastLimit();
+            var friction = Friction * GroundFriction;
 
-        // how fast we want to go according to our input
-        var desiredVelocity = input * _maxSpeed;
-
-        // how fast we are going
-        var flatVelocity = velocity.ToVector2Flat();
-
-        // how much can we change the velocity
-        var maxSpeedChange = MaxAcceleration * (float)delta;
-
-        // set friction if no input
-        if (input.IsZeroApprox())
-        {
-            maxSpeedChange = Friction * (float)delta;
-            if (!IsOnFloor()) maxSpeedChange *= AirFrictionFactor;
-        }
-        else if (!IsOnFloor())
-        {
-            maxSpeedChange *= AirSpeedControl;
-            additive = _state == MovementState.Crouching;
-        }
-
-        var moved = flatVelocity.MoveToward(desiredVelocity, maxSpeedChange);
-
-        if (additive)
-        {
-            // take the max
-            flatVelocity = moved.LengthSquared() < flatVelocity.LengthSquared() ? flatVelocity : moved;
+            velocity = CheckVelocity(velocity);
+            velocity = velocity.MoveToward(Vector3.Zero, friction *(float)delta);
         }
         else
         {
-            flatVelocity = moved;
+            // acceleration
+
+            var desiredVelocity = (desiredDirection * _maxSpeed).ToVector3Flat(velocity.Y);
+
+            velocity = velocity.MoveToward(desiredVelocity, MovementForce / MassKg * (float)delta);
+
+            velocity = CheckVelocity(velocity);
         }
 
-        return flatVelocity.ToVector3Flat(velocity.Y);
+        return velocity;
+    }
+
+    private Vector3 CheckVelocity(Vector3 velocity)
+    {
+        velocity.X = Mathf.Clamp(velocity.X, -MaxVelocity, MaxVelocity);
+        velocity.Z = Mathf.Clamp(velocity.Z, -MaxVelocity, MaxVelocity);
+        return velocity;
     }
 
     private Vector3 Gravity(double delta, Vector3 velocity)
