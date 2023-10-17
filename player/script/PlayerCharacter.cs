@@ -584,8 +584,9 @@ public partial class PlayerCharacter : CharacterBody3D
             // acceleration
 
             var desiredVelocity = (desiredDirection * _maxSpeed).ToVector3Flat(velocity.Y);
+            var acceleration = MovementForce / MassKg * (float)delta;
 
-            velocity = velocity.MoveToward(desiredVelocity, MovementForce / MassKg * (float)delta);
+            velocity = velocity.MoveToward(desiredVelocity, acceleration);
 
             velocity = CheckVelocity(velocity);
         }
