@@ -11,4 +11,3 @@ layers = 2
 mesh = SubResource("BoxMesh_478vd")
 script = ExtResource("1_d1t55")
 Bullet = ExtResource("2_s5rej")
-FireRateRpm = 1200.0
