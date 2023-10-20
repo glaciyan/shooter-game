@@ -40,10 +40,7 @@ public class Magazine
     /// Adds a single bullet from this magazine.
     /// </summary>
     /// <returns>True if it was possible to add a bullet, false otherwise.</returns>
-    public bool AddBullet()
-    {
-        return AddBullets(1) == 1;
-    }
+    public bool AddBullet() => AddBullets(1) == 1;
 
     /// <summary>
     /// Removes bullets from this magazine.
@@ -69,8 +66,12 @@ public class Magazine
     /// Removes a single bullet from this magazine.
     /// </summary>
     /// <returns>True if it was possible to remove a bullet, false otherwise.</returns>
-    public bool RemoveBullet()
-    {
-        return RemoveBullets(1) == 1;
-    }
+    public bool RemoveBullet() => RemoveBullets(1) == 1;
+
+    /// <summary>
+    /// Moves bullets from one magazine to the other.
+    /// </summary>
+    /// <param name="from">Magazine to move bullets from.</param>
+    /// <returns>The amount of bullets moved.</returns>
+    public int MoveBullets(Magazine from) => from.RemoveBullets(AddBullets(from.Bullets));
 }
