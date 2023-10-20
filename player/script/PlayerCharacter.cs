@@ -120,7 +120,9 @@ public partial class PlayerCharacter : CharacterBody3D
     // Nodes
     private CameraController _cameraController;
     private CollisionShape3D _standingCollision;
+
     private CollisionShape3D _crouchingCollision;
+
     private ShapeCast3D _shapeCast = new();
 
     public override void _Ready()
@@ -209,17 +211,16 @@ public partial class PlayerCharacter : CharacterBody3D
         DoWalkStairs(delta, desiredVelocity, oldPosition);
     }
 
-    private void StickToFloor()
+    private void StartControlling()
     {
-        if (!IsSupported() && !StickDown.IsZeroApprox() && Velocity.Y is > -1.0f and < 1.0e-2f)
-        {
-            var col = ShootShapeCast(Vector3.Zero, StickDown);
-            if (col.IsColliding())
-            {
-                var frac = col.GetClosestCollisionSafeFraction();
-                GlobalPosition += frac * StickDown;
-            }
-        }
+        Input.MouseMode = Input.MouseModeEnum.Captured;
+        _isControlling = true;
+    }
+
+    private void StopControlling()
+    {
+        Input.MouseMode = Input.MouseModeEnum.Visible;
+        _isControlling = false;
     }
 
 
@@ -287,6 +288,152 @@ public partial class PlayerCharacter : CharacterBody3D
         ChangeCastShape(oldShape, oldShapeOffset);
         var hit = collision?.IsColliding() ?? false;
         return !hit;
+    }
+
+    private ulong _lastJumpTime;
+
+    private Vector3 Jump(Vector3 velocity)
+    {
+        if (Input.IsActionJustPressed("jump") && IsOnFloor())
+        {
+            velocity.Y = JumpForceN / MassKg;
+            _lastJumpTime = Time.GetTicksMsec();
+        }
+
+        return velocity;
+    }
+
+    private ulong _lastLandedTime;
+
+    private bool _falling;
+
+    private Vector3 Gravity(double delta, Vector3 velocity)
+    {
+        if (!IsOnFloor())
+        {
+            velocity.Y -= _gravity * GravityMultiplier * (float)delta;
+            _falling = true;
+        }
+        else
+        {
+            if (_falling) _lastLandedTime = Time.GetTicksMsec();
+            _falling = false;
+        }
+
+        velocity.Y = Math.Clamp(velocity.Y, -TerminalVelocity, float.MaxValue);
+
+        return velocity;
+    }
+
+    private float _oldWishSpeedMultiplier;
+
+    private Vector3 Movement(double delta, Vector3 velocity)
+    {
+        if (_state != MovementState.Crouching && Input.IsActionPressed("sprint")) _state = MovementState.Sprinting;
+
+        var (sMove, fMove) = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
+        var movement = velocity.ToVector2Flat();
+
+        var desiredDirection = (fMove * ForwardVector + sMove * RightVector).Normalized();
+
+        _oldWishSpeedMultiplier = _wishSpeedMultiplier;
+        _wishSpeedMultiplier = _state switch
+        {
+            MovementState.Walking => WalkingAccelerationMultiplier,
+            MovementState.Crouching => CrouchingAccelerationMultiplier,
+            MovementState.Sprinting => fMove < -0.99f ? SprintingAccelerationMultiplier : WalkingAccelerationMultiplier,
+            _ => WalkingAccelerationMultiplier
+        };
+
+        // friction
+
+        // enable bunny hopping
+        // if (_falling || Time.GetTicksMsec() - _lastLandedTime < 30)
+        if (_falling)
+        {
+            // air acceleration
+            movement = AirAccelerate(desiredDirection, movement, AirAcceleration,
+                MaxAirVelocity, delta);
+        }
+        else
+        {
+            var speed = movement.Length();
+            if (speed != 0)
+            {
+                var drop = speed * Friction * (float)delta;
+                movement *= Mathf.Max(speed - drop, 0) / speed;
+            }
+
+            // ground acceleration
+            movement = Accelerate(desiredDirection, movement, Acceleration * _wishSpeedMultiplier,
+                MaxVelocity, delta);
+        }
+
+        return movement.ToVector3Flat(velocity.Y);
+    }
+
+    private Vector2 Accelerate(Vector2 desiredDirection, Vector2 movement, float acceleration, float speedLimit,
+        double delta)
+    {
+        var projection = movement.Dot(desiredDirection);
+        var magnitude = Mathf.Abs(projection);
+        var addSpeed = acceleration * (float)delta;
+
+        var diff = speedLimit - addSpeed;
+
+        if (magnitude < diff)
+        {
+            return movement + desiredDirection * addSpeed;
+        }
+
+        if (diff <= magnitude && magnitude < speedLimit)
+        {
+            return movement + (speedLimit - magnitude) * desiredDirection;
+        }
+
+        // if (speedLimit <= projection)
+        return movement;
+    }
+
+    private Vector2 AirAccelerate(Vector2 desiredDirection, Vector2 movement, float acceleration, float speedLimit,
+        double delta)
+    {
+        var projection = movement.Dot(desiredDirection);
+        var magnitude = Mathf.Abs(projection);
+        var addSpeed = acceleration * (float)delta;
+
+        var diff = speedLimit - addSpeed;
+
+        if (projection < 0)
+        {
+            return movement + desiredDirection * addSpeed * AirStopSpeed;
+        }
+
+        if (magnitude < diff)
+        {
+            return movement + desiredDirection * addSpeed;
+        }
+
+        if (diff <= magnitude && magnitude < speedLimit)
+        {
+            return movement + (speedLimit - magnitude) * desiredDirection;
+        }
+
+        // if (speedLimit <= projection)
+        return movement;
+    }
+
+    private void StickToFloor()
+    {
+        if (!IsSupported() && !StickDown.IsZeroApprox() && Velocity.Y is > -1.0f and < 1.0e-2f)
+        {
+            var col = ShootShapeCast(Vector3.Zero, StickDown);
+            if (col.IsColliding())
+            {
+                var frac = col.GetClosestCollisionSafeFraction();
+                GlobalPosition += frac * StickDown;
+            }
+        }
     }
 
     private void DoWalkStairs(double delta, Vector3 desiredVelocity, Vector3 oldPosition)
@@ -489,6 +636,8 @@ public partial class PlayerCharacter : CharacterBody3D
     }
 
     // The Player has ground underneath them
+
+
     private bool IsSupported()
     {
         if (IsOnFloor()) return true;
@@ -506,6 +655,7 @@ public partial class PlayerCharacter : CharacterBody3D
     }
 
     private Vector3 _shapeCastOffset = Vector3.Zero;
+
 
     private ShapeCast3D ShootShapeCastGlobal(Vector3 from, Vector3 target)
     {
@@ -525,157 +675,6 @@ public partial class PlayerCharacter : CharacterBody3D
         // DebugDraw3D.DrawPoints(new[] { _shapeCast.GlobalPosition }, 0.2f, Colors.Black, 0.1f);
 
         return _shapeCast;
-    }
-
-    private void StartControlling()
-    {
-        Input.MouseMode = Input.MouseModeEnum.Captured;
-        _isControlling = true;
-    }
-
-    private void StopControlling()
-    {
-        Input.MouseMode = Input.MouseModeEnum.Visible;
-        _isControlling = false;
-    }
-
-    private float _oldWishSpeedMultiplier;
-
-    private Vector3 Movement(double delta, Vector3 velocity)
-    {
-        if (_state != MovementState.Crouching && Input.IsActionPressed("sprint")) _state = MovementState.Sprinting;
-
-        var (sMove, fMove) = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
-        var movement = velocity.ToVector2Flat();
-
-        var desiredDirection = (fMove * ForwardVector + sMove * RightVector).Normalized();
-
-        _oldWishSpeedMultiplier = _wishSpeedMultiplier;
-        _wishSpeedMultiplier = _state switch
-        {
-            MovementState.Walking => WalkingAccelerationMultiplier,
-            MovementState.Crouching => CrouchingAccelerationMultiplier,
-            MovementState.Sprinting => fMove < -0.99f ? SprintingAccelerationMultiplier : WalkingAccelerationMultiplier,
-            _ => WalkingAccelerationMultiplier
-        };
-
-        // friction
-
-        // enable bunny hopping
-        // if (_falling || Time.GetTicksMsec() - _lastLandedTime < 30)
-        if (_falling)
-        {
-            // air acceleration
-            movement = AirAccelerate(desiredDirection, movement, AirAcceleration,
-                MaxAirVelocity, delta);
-        }
-        else
-        {
-            var speed = movement.Length();
-            if (speed != 0)
-            {
-                var drop = speed * Friction * (float)delta;
-                movement *= Mathf.Max(speed - drop, 0) / speed;
-            }
-
-            // ground acceleration
-            movement = Accelerate(desiredDirection, movement, Acceleration * _wishSpeedMultiplier,
-                MaxVelocity, delta);
-        }
-
-        return movement.ToVector3Flat(velocity.Y);
-    }
-
-    private Vector2 Accelerate(Vector2 desiredDirection, Vector2 movement, float acceleration, float speedLimit,
-        double delta)
-    {
-        var projection = movement.Dot(desiredDirection);
-        var magnitude = Mathf.Abs(projection);
-        var addSpeed = acceleration * (float)delta;
-
-        var diff = speedLimit - addSpeed;
-
-        if (magnitude < diff)
-        {
-            return movement + desiredDirection * addSpeed;
-        }
-
-        if (diff <= magnitude && magnitude < speedLimit)
-        {
-            return movement + (speedLimit - magnitude) * desiredDirection;
-        }
-
-        // if (speedLimit <= projection)
-        return movement;
-    }
-    
-    private Vector2 AirAccelerate(Vector2 desiredDirection, Vector2 movement, float acceleration, float speedLimit,
-        double delta)
-    {
-        var projection = movement.Dot(desiredDirection);
-        var magnitude = Mathf.Abs(projection);
-        var addSpeed = acceleration * (float)delta;
-
-        var diff = speedLimit - addSpeed;
-
-        if (projection < 0)
-        {
-            return movement + desiredDirection * addSpeed * AirStopSpeed;
-        }
-
-        if (magnitude < diff)
-        {
-            return movement + desiredDirection * addSpeed;
-        }
-
-        if (diff <= magnitude && magnitude < speedLimit)
-        {
-            return movement + (speedLimit - magnitude) * desiredDirection;
-        }
-
-        // if (speedLimit <= projection)
-        return movement;
-    }
-
-    private Vector3 CheckVelocity(Vector3 velocity)
-    {
-        velocity.X = Mathf.Clamp(velocity.X, -MaxVelocity, MaxVelocity);
-        velocity.Z = Mathf.Clamp(velocity.Z, -MaxVelocity, MaxVelocity);
-        return velocity;
-    }
-
-    private ulong _lastLandedTime;
-    private bool _falling;
-
-    private Vector3 Gravity(double delta, Vector3 velocity)
-    {
-        if (!IsOnFloor())
-        {
-            velocity.Y -= _gravity * GravityMultiplier * (float)delta;
-            _falling = true;
-        }
-        else
-        {
-            if (_falling) _lastLandedTime = Time.GetTicksMsec();
-            _falling = false;
-        }
-
-        velocity.Y = Math.Clamp(velocity.Y, -TerminalVelocity, float.MaxValue);
-
-        return velocity;
-    }
-
-    private ulong _lastJumpTime;
-
-    private Vector3 Jump(Vector3 velocity)
-    {
-        if (Input.IsActionJustPressed("jump") && IsOnFloor())
-        {
-            velocity.Y = JumpForceN / MassKg;
-            _lastJumpTime = Time.GetTicksMsec();
-        }
-
-        return velocity;
     }
 
     private void ChangeCastShape(Shape3D shape, Vector3? offset = null)
