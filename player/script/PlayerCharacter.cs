@@ -486,8 +486,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private bool IsSlopeTooSteep(Vector3 normal)
     {
-        var floorAngle = Mathf.Acos(normal.Dot(UpDirection));
-        return floorAngle >= FloorMaxAngle + FloorMaxAngleThreshold;
+        return normal.Dot(UpDirection) <= 0.95f;
     }
 
     // The Player has ground underneath them
