@@ -620,7 +620,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
         if (projection < 0)
         {
-            return movement + desiredDirection * addSpeed * 0.05f;
+            return movement + desiredDirection * addSpeed * 0.15f;
         }
 
         if (magnitude < diff)
