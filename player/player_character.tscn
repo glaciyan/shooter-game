@@ -75,6 +75,7 @@ script = ExtResource("6_ie6jj")
 [node name="HandsCamera3D" type="Camera3D" parent="HandsDisplay/SubViewportContainer/SubViewport"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 cull_mask = 2
+current = true
 
 [node name="PlayerWeapons" parent="HandsDisplay/SubViewportContainer/SubViewport/HandsCamera3D" node_paths=PackedStringArray("Player") instance=ExtResource("7_rrtd3")]
 Player = NodePath("../../../../..")

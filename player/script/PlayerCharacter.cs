@@ -550,14 +550,17 @@ public partial class PlayerCharacter : CharacterBody3D
 
     private float _oldWishSpeed;
 
+    private Vector2 _localVelocity = Vector2.Zero;
+
     private Vector3 Movement(double delta, Vector3 velocity)
     {
         if (_state != MovementState.Crouching && Input.IsActionPressed("sprint")) _state = MovementState.Sprinting;
 
-        var (sMove, fMove) = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
+        var input = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
         var movement = velocity.ToVector2Flat();
 
-        var desiredDirection = (ForwardVector * fMove + RightVector * sMove).Normalized();
+        var desiredDirection = input.Normalized();
+        var desiredVelocity = desiredDirection * _wishSpeed;
 
         _oldWishSpeed = _wishSpeed;
         _wishSpeed = _state switch
@@ -575,8 +578,8 @@ public partial class PlayerCharacter : CharacterBody3D
             if (desiredDirection.IsZeroApprox())
             {
                 // no input in air just apply regular air friction
-                var friction = Friction * AirFrictionFactor;
-                movement = movement.MoveToward(Vector2.Zero, friction * (float)delta);
+                var friction = Friction * AirFrictionFactor * (float)delta;
+                _localVelocity = _localVelocity.MoveToward(Vector2.Zero, friction);
             }
             else
             {
@@ -584,32 +587,37 @@ public partial class PlayerCharacter : CharacterBody3D
                 // 1. Should be able to control themself in the air with the air factors
                 // 2. Should not slow down based on _wishSpeed
                 // The only slowdown should be friction or player controlling mid air
-                GD.Print(movement.Dot(desiredDirection));
             }
         }
         else
         {
             // walking movement
 
-            if (desiredDirection.IsZeroApprox())
+            if (input.IsZeroApprox())
             {
                 // no input apply friction
 
-                var friction = Friction * GroundFriction;
-                movement = movement.MoveToward(Vector2.Zero, friction * (float)delta);
+                var friction = Friction * GroundFriction * (float)delta;
+                _localVelocity = _localVelocity.MoveToward(Vector2.Zero, friction);
             }
             else
             {
                 // acceleration
-
-                var desiredVelocity = desiredDirection * _wishSpeed;
                 var acceleration = MovementForce / MassKg * (float)delta;
-
-                movement = movement.MoveToward(desiredVelocity, acceleration);
+                _localVelocity = _localVelocity.MoveToward(desiredVelocity, acceleration);
             }
         }
 
 
+        var wishDir = movement.Normalized();
+        movement = _localVelocity.Y * ForwardVector + _localVelocity.X * RightVector;
+        var dot = _wishSpeed - movement.Dot(wishDir);
+        
+        var graph = DebugDraw2D.GetGraph("dot") ?? DebugDraw2D.CreateGraph("dot");
+        graph.BufferSize = 1000;
+        graph.Offset = new Vector2I(0, 100);
+        DebugDraw2D.GraphUpdateData("dot", (MovementForce / MassKg) * (float)delta);
+        
         return movement.ToVector3Flat(velocity.Y);
     }
 
