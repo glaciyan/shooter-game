@@ -14,28 +14,31 @@ public partial class PlayerCharacter : CharacterBody3D
 
     [ExportGroup("Moving")]
     [Export]
-    public float WalkingAccelerationMultiplier = 1f;
-
-    [Export]
-    public float SprintingAccelerationMultiplier = 1.4f;
-
-    [Export]
-    public float MaxVelocity = 7f;
-
-    [Export]
-    public float MaxAirVelocity = 5f;
-
-    [Export]
     public float Acceleration = 50f;
 
     [Export]
-    public float AirAcceleration = 8f;
+    public float AirAcceleration = 100f;
+
+    [Export]
+    public float MaxVelocity = 7f;
+    
+    [Export]
+    public float MaxAirVelocity = 0.7f;
 
     [Export]
     public float Friction = 10f;
 
     [Export]
-    public float AirFriction = 0.2f;
+    public float AirStopSpeed = 0.15f;
+
+    [Export]
+    public float WalkingAccelerationMultiplier = 1f;
+
+    [Export]
+    public float CrouchingAccelerationMultiplier = 0.6f;
+    
+    [Export]
+    public float SprintingAccelerationMultiplier = 1.4f;
 
     [Export]
     public float MassKg = 60.0f; // TODO get rid off that
@@ -72,9 +75,6 @@ public partial class PlayerCharacter : CharacterBody3D
 
     [ExportSubgroup("")]
     [ExportGroup("Crouching")]
-    [Export]
-    public float CrouchingAccelerationMultiplier = 0.6f;
-
     [Export]
     public float StandingHeight = 1.8f;
 
@@ -566,8 +566,8 @@ public partial class PlayerCharacter : CharacterBody3D
         if (_falling)
         {
             // air acceleration
-            movement = AirAccelerate(desiredDirection, movement, 100f,
-                0.7f, delta);
+            movement = AirAccelerate(desiredDirection, movement, AirAcceleration,
+                MaxAirVelocity, delta);
         }
         else
         {
@@ -620,7 +620,7 @@ public partial class PlayerCharacter : CharacterBody3D
 
         if (projection < 0)
         {
-            return movement + desiredDirection * addSpeed * 0.15f;
+            return movement + desiredDirection * addSpeed * AirStopSpeed;
         }
 
         if (magnitude < diff)
