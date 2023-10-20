@@ -29,7 +29,7 @@ public partial class PlayerCharacter : CharacterBody3D
     public float Acceleration = 50f;
 
     [Export]
-    public float AirAcceleration = 12;
+    public float AirAcceleration = 8f;
 
     [Export]
     public float Friction = 10f;
@@ -106,7 +106,6 @@ public partial class PlayerCharacter : CharacterBody3D
     private const float LookaroundSpeedReduction = 0.002f;
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private bool _isControlling;
-    private const float FloorMaxAngleThreshold = 0.01f;
     private float _wishSpeedMultiplier;
     private MovementState _state;
     private Vector3 _cameraPosition;
@@ -206,7 +205,7 @@ public partial class PlayerCharacter : CharacterBody3D
         MoveAndSlide();
 
         StickToFloor();
-
+        
         DoWalkStairs(delta, desiredVelocity, oldPosition);
     }
 
@@ -556,53 +555,86 @@ public partial class PlayerCharacter : CharacterBody3D
         {
             MovementState.Walking => WalkingAccelerationMultiplier,
             MovementState.Crouching => CrouchingAccelerationMultiplier,
-            MovementState.Sprinting => SprintingAccelerationMultiplier,
+            MovementState.Sprinting => fMove < -0.99f ? SprintingAccelerationMultiplier : WalkingAccelerationMultiplier,
             _ => WalkingAccelerationMultiplier
         };
-        if (_falling) _wishSpeedMultiplier = Mathf.Max(_oldWishSpeedMultiplier, _wishSpeedMultiplier);
 
         // friction
-        var speed = movement.Length();
-        if (speed != 0)
-        {
-            var drop = speed * (_falling ? AirFriction : Friction) * (float)delta;
-            movement *= Mathf.Max(speed - drop, 0) / speed;
-        }
 
+        // enable bunny hopping
+        // if (_falling || Time.GetTicksMsec() - _lastLandedTime < 30)
         if (_falling)
         {
             // air acceleration
-            var multiplier = Mathf.Max(_wishSpeedMultiplier, _oldWishSpeedMultiplier);
-            movement = Accelerate(desiredDirection, movement, AirAcceleration * multiplier,
-                MaxAirVelocity * multiplier, delta);
-            movement = movement.LimitLength(MaxAirVelocity * multiplier);
-            GD.Print(movement.Length());
+            movement = AirAccelerate(desiredDirection, movement, 100f,
+                0.7f, delta);
         }
         else
         {
+            var speed = movement.Length();
+            if (speed != 0)
+            {
+                var drop = speed * Friction * (float)delta;
+                movement *= Mathf.Max(speed - drop, 0) / speed;
+            }
+
             // ground acceleration
             movement = Accelerate(desiredDirection, movement, Acceleration * _wishSpeedMultiplier,
                 MaxVelocity, delta);
-            
         }
 
         return movement.ToVector3Flat(velocity.Y);
     }
 
-    private Vector2 Accelerate(Vector2 desiredDirection, Vector2 movement, float acceleration, float wishSpeed,
+    private Vector2 Accelerate(Vector2 desiredDirection, Vector2 movement, float acceleration, float speedLimit,
         double delta)
     {
         var projection = movement.Dot(desiredDirection);
-        var accelSpeed = acceleration * (float)delta;
+        var magnitude = Mathf.Abs(projection);
+        var addSpeed = acceleration * (float)delta;
 
-        var addSpeed = wishSpeed - projection;
-        
-        if (accelSpeed > addSpeed)
+        var diff = speedLimit - addSpeed;
+
+        if (magnitude < diff)
         {
-            accelSpeed = addSpeed;
+            return movement + desiredDirection * addSpeed;
         }
-        
-        return movement + desiredDirection * accelSpeed;
+
+        if (diff <= magnitude && magnitude < speedLimit)
+        {
+            return movement + (speedLimit - magnitude) * desiredDirection;
+        }
+
+        // if (speedLimit <= projection)
+        return movement;
+    }
+    
+    private Vector2 AirAccelerate(Vector2 desiredDirection, Vector2 movement, float acceleration, float speedLimit,
+        double delta)
+    {
+        var projection = movement.Dot(desiredDirection);
+        var magnitude = Mathf.Abs(projection);
+        var addSpeed = acceleration * (float)delta;
+
+        var diff = speedLimit - addSpeed;
+
+        if (projection < 0)
+        {
+            return movement + desiredDirection * addSpeed * 0.05f;
+        }
+
+        if (magnitude < diff)
+        {
+            return movement + desiredDirection * addSpeed;
+        }
+
+        if (diff <= magnitude && magnitude < speedLimit)
+        {
+            return movement + (speedLimit - magnitude) * desiredDirection;
+        }
+
+        // if (speedLimit <= projection)
+        return movement;
     }
 
     private Vector3 CheckVelocity(Vector3 velocity)
