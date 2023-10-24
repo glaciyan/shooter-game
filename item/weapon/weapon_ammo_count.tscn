@@ -1,10 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://f2qcfjvpdmr0"]
+[gd_scene load_steps=3 format=3 uid="uid://clkeso6x64f5w"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_45c02"]
 font_size = 32
+shadow_size = 7
+shadow_color = Color(0, 0, 0, 0.34902)
+shadow_offset = Vector2(0, 0)
 
 [sub_resource type="LabelSettings" id="LabelSettings_hq02n"]
 font_color = Color(0.631373, 0.631373, 0.631373, 1)
+shadow_size = 4
+shadow_color = Color(0, 0, 0, 0.47451)
+shadow_offset = Vector2(0, 0)
 
 [node name="WeaponAmmoCount" type="Control"]
 layout_mode = 3

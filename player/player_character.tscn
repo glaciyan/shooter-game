@@ -1,10 +1,9 @@
-[gd_scene load_steps=12 format=3 uid="uid://b3gr35vagtxy8"]
+[gd_scene load_steps=11 format=3 uid="uid://b3gr35vagtxy8"]
 
 [ext_resource type="Script" path="res://player/script/PlayerCharacter.cs" id="1_e76sx"]
 [ext_resource type="Script" path="res://player/script/Smoothing.cs" id="3_6d4xc"]
 [ext_resource type="Script" path="res://player/script/CameraController.cs" id="4_8wyyi"]
-[ext_resource type="Script" path="res://player/script/Crosshair.gd" id="5_ntg4d"]
-[ext_resource type="Texture2D" uid="uid://nqyu67hkught" path="res://assets/crosshair.png" id="5_y8etn"]
+[ext_resource type="PackedScene" uid="uid://bvkrpp33dt5e1" path="res://player/hud.tscn" id="6_65jwp"]
 [ext_resource type="Script" path="res://player/script/WeaponViewport.gd" id="6_ie6jj"]
 [ext_resource type="PackedScene" uid="uid://4k0vdo2eb3tv" path="res://player/player_weapons.tscn" id="7_rrtd3"]
 
@@ -81,16 +80,4 @@ current = true
 [node name="PlayerWeapons" parent="HandsDisplay/SubViewportContainer/SubViewport/HandsCamera3D" node_paths=PackedStringArray("Player") instance=ExtResource("7_rrtd3")]
 Player = NodePath("../../../../..")
 
-[node name="HUD" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="Crosshair" type="TextureRect" parent="HUD"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-texture = ExtResource("5_y8etn")
-stretch_mode = 3
-script = ExtResource("5_ntg4d")
+[node name="HUD" parent="." instance=ExtResource("6_65jwp")]

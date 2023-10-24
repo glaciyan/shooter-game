@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=3 uid="uid://bvkrpp33dt5e1"]
+
+[ext_resource type="Texture2D" uid="uid://nqyu67hkught" path="res://assets/crosshair.png" id="1_62nkf"]
+[ext_resource type="Script" path="res://player/script/Crosshair.gd" id="2_kukrr"]
+[ext_resource type="PackedScene" uid="uid://clkeso6x64f5w" path="res://item/weapon/weapon_ammo_count.tscn" id="3_3405i"]
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Crosshair" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("1_62nkf")
+stretch_mode = 3
+script = ExtResource("2_kukrr")
+
+[node name="WeaponAmmoCount" parent="." instance=ExtResource("3_3405i")]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+grow_horizontal = 0
+grow_vertical = 0

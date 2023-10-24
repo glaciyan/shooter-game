@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://br3kh5uy48act"]
+[gd_scene load_steps=4 format=3 uid="uid://br3kh5uy48act"]
 
-[ext_resource type="PackedScene" uid="uid://c3mcw3al431es" path="res://item/weapon/shooting_weapon.tscn" id="1_udw1v"]
+[ext_resource type="Script" path="res://item/weapon/rifle/Rifle.cs" id="1_vc5ho"]
+[ext_resource type="PackedScene" uid="uid://ckqpg015s4kos" path="res://bullet/debug_bullet.tscn" id="2_ck3u1"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_mbsqs"]
 size = Vector3(0.14, 0.33, 0.85)
@@ -8,6 +9,8 @@ size = Vector3(0.14, 0.33, 0.85)
 [node name="Rifle" type="MeshInstance3D"]
 layers = 2
 mesh = SubResource("BoxMesh_mbsqs")
-
-[node name="ShootingWeapon" parent="." instance=ExtResource("1_udw1v")]
+script = ExtResource("1_vc5ho")
 MagazineCapacity = 30
+Bullet = ExtResource("2_ck3u1")
+ShootingType = 1
+FireRateRpm = 800.0

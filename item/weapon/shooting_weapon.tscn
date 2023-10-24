@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://c3mcw3al431es"]
+[gd_scene load_steps=2 format=3 uid="uid://cabpcd77t7awd"]
 
 [ext_resource type="Script" path="res://item/weapon/ShootingWeapon.cs" id="1_wmh76"]
 
