@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3mcw3al431es"]
+
+[ext_resource type="Script" path="res://item/weapon/ShootingWeapon.cs" id="1_wmh76"]
+
+[node name="ShootingWeapon" type="Node3D"]
+script = ExtResource("1_wmh76")

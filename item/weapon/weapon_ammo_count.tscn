@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=3 uid="uid://f2qcfjvpdmr0"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_45c02"]
+font_size = 32
+
+[sub_resource type="LabelSettings" id="LabelSettings_hq02n"]
+font_color = Color(0.631373, 0.631373, 0.631373, 1)
+
+[node name="WeaponAmmoCount" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -92.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="AspectRatioContainer"]
+layout_mode = 2
+
+[node name="CurrentAmmo" type="Label" parent="AspectRatioContainer/HBoxContainer"]
+layout_mode = 2
+text = "12"
+label_settings = SubResource("LabelSettings_45c02")
+
+[node name="ReserveAmmo" type="Label" parent="AspectRatioContainer/HBoxContainer"]
+layout_mode = 2
+text = "60"
+label_settings = SubResource("LabelSettings_hq02n")
