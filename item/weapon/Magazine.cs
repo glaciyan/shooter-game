@@ -2,17 +2,15 @@
 
 public class Magazine
 {
-    public readonly int MaxCapacity;
+    public readonly int Capacity;
+    public int Bullets { get; private set; }
 
-    private int _bullets;
-    public int Bullets => _bullets;
-
-    public Magazine(int maxCapacity, bool filled = true)
+    public Magazine(int capacity, bool filled = true)
     {
-        MaxCapacity = maxCapacity;
+        Capacity = capacity;
         if (filled)
         {
-            _bullets = MaxCapacity;
+            Bullets = Capacity;
         }
     }
 
@@ -23,15 +21,15 @@ public class Magazine
     /// <returns>The amount of bullets that were able to be added.</returns>
     public int AddBullets(int amount)
     {
-        if (_bullets + amount <= MaxCapacity)
+        if (Bullets + amount <= Capacity)
         {
-            _bullets += amount;
+            Bullets += amount;
             return amount;
         }
         else
         {
-            var b = MaxCapacity - _bullets;
-            _bullets = MaxCapacity;
+            var b = Capacity - Bullets;
+            Bullets = Capacity;
             return b;
         }
     }
@@ -49,15 +47,15 @@ public class Magazine
     /// <returns>The amount of bullets that have been able to be removed.</returns>
     public int RemoveBullets(int amount)
     {
-        if (amount <= _bullets)
+        if (amount <= Bullets)
         {
-            _bullets -= amount;
+            Bullets -= amount;
             return amount;
         }
         else
         {
-            var b = _bullets;
-            _bullets = 0;
+            var b = Bullets;
+            Bullets = 0;
             return b;
         }
     }
