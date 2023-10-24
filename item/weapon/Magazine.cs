@@ -26,12 +26,10 @@ public class Magazine
             Bullets += amount;
             return amount;
         }
-        else
-        {
-            var b = Capacity - Bullets;
-            Bullets = Capacity;
-            return b;
-        }
+
+        var b = Capacity - Bullets;
+        Bullets = Capacity;
+        return b;
     }
 
     /// <summary>
@@ -52,12 +50,10 @@ public class Magazine
             Bullets -= amount;
             return amount;
         }
-        else
-        {
-            var b = Bullets;
-            Bullets = 0;
-            return b;
-        }
+
+        var b = Bullets;
+        Bullets = 0;
+        return b;
     }
 
     /// <summary>
