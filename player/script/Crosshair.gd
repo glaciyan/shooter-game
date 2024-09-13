@@ -8,4 +8,3 @@ func _ready():
 
 func adjust_size_to_viewport():
 	set_deferred("size", get_viewport().get_visible_rect().size)
-
