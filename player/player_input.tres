@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="InputActionMapConfig" load_steps=13 format=3 uid="uid://cm0n8cvo0fi4b"]
+
+[ext_resource type="Script" path="res://input/script/Key4WayVector2Config.cs" id="1_kwb7m"]
+[ext_resource type="Script" path="res://input/script/ValueActionConfig.cs" id="2_f8h0p"]
+[ext_resource type="Script" path="res://input/script/MouseDeltaVector2Config.cs" id="3_djyld"]
+[ext_resource type="Script" path="res://input/script/InputActionMapConfig.cs" id="4_bhovr"]
+
+[sub_resource type="InputEventKey" id="InputEventKey_sgiil"]
+device = -1
+keycode = 83
+unicode = 115
+
+[sub_resource type="InputEventKey" id="InputEventKey_koubx"]
+device = -1
+keycode = 65
+unicode = 97
+
+[sub_resource type="InputEventKey" id="InputEventKey_unjsi"]
+device = -1
+keycode = 68
+unicode = 100
+
+[sub_resource type="InputEventKey" id="InputEventKey_nqklj"]
+device = -1
+keycode = 87
+unicode = 119
+
+[sub_resource type="Resource" id="Resource_yycg3"]
+script = ExtResource("1_kwb7m")
+Up = SubResource("InputEventKey_nqklj")
+Down = SubResource("InputEventKey_sgiil")
+Left = SubResource("InputEventKey_koubx")
+Right = SubResource("InputEventKey_unjsi")
+
+[sub_resource type="Resource" id="Resource_vkc67"]
+script = ExtResource("2_f8h0p")
+ValueEventMapping = Array[Object]([SubResource("Resource_yycg3")])
+Name = "Move"
+
+[sub_resource type="Resource" id="Resource_ek4jx"]
+script = ExtResource("3_djyld")
+
+[sub_resource type="Resource" id="Resource_g26o2"]
+script = ExtResource("2_f8h0p")
+ValueEventMapping = Array[Object]([SubResource("Resource_ek4jx")])
+Name = "Look"
+
+[resource]
+script = ExtResource("4_bhovr")
+Actions = Array[Object]([SubResource("Resource_vkc67"), SubResource("Resource_g26o2")])

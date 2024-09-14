@@ -5,7 +5,7 @@ namespace shootergame.player.script;
 public partial class Smoothing : Node3D
 {
     [Export]
-    public PlayerCharacter Target;
+    public CharacterController Target;
 
     private Vector3 _currentPosition;
     private Vector3 _oldPosition;

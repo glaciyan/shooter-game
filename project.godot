@@ -21,7 +21,7 @@ project/assembly_name="shooter-game"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/smoothing/plugin.cfg")
+enabled=PackedStringArray()
 
 [input]
 

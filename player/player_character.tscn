@@ -1,6 +1,6 @@
 [gd_scene load_steps=11 format=3 uid="uid://b3gr35vagtxy8"]
 
-[ext_resource type="Script" path="res://player/script/PlayerCharacter.cs" id="1_e76sx"]
+[ext_resource type="Script" path="res://player/script/CharacterController.cs" id="1_8pxfs"]
 [ext_resource type="Script" path="res://player/script/Smoothing.cs" id="3_6d4xc"]
 [ext_resource type="Script" path="res://player/script/CameraController.cs" id="4_8wyyi"]
 [ext_resource type="PackedScene" uid="uid://bvkrpp33dt5e1" path="res://player/hud.tscn" id="6_65jwp"]
@@ -24,7 +24,7 @@ height = 1.8
 collision_layer = 2
 collision_mask = 33
 floor_constant_speed = true
-script = ExtResource("1_e76sx")
+script = ExtResource("1_8pxfs")
 
 [node name="StandingCollision" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_a8cmu")

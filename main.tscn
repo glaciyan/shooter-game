@@ -1,8 +1,7 @@
-[gd_scene load_steps=12 format=3 uid="uid://c6356ubeoiydj"]
+[gd_scene load_steps=11 format=3 uid="uid://c6356ubeoiydj"]
 
 [ext_resource type="PackedScene" uid="uid://b3gr35vagtxy8" path="res://player/player_character.tscn" id="1_bfuh2"]
 [ext_resource type="Script" path="res://main.gd" id="1_ibyna"]
-[ext_resource type="Script" path="res://player/script/InputSystem.cs" id="3_h5hdp"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_72qq7"]
 sky_top_color = Color(0.317647, 0.733333, 0.878431, 1)
@@ -204,10 +203,28 @@ transform = Transform3D(0.764078, 0, 0.645124, 0, 1, 0, -0.645124, 0, 0.764078, 
 use_collision = true
 material = SubResource("StandardMaterial3D_r8oc7")
 
-[node name="Player" type="Node" parent="."]
-
-[node name="PlayerCharacter" parent="Player" instance=ExtResource("1_bfuh2")]
+[node name="PlayerCharacter" parent="." instance=ExtResource("1_bfuh2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65872, 1.43481, 2.84615)
-
-[node name="InputSystem" type="Node" parent="Player"]
-script = ExtResource("3_h5hdp")
+Acceleration = null
+AirAcceleration = null
+MaxVelocity = null
+MaxAirVelocity = null
+Friction = null
+AirStopSpeed = null
+WalkingAccelerationMultiplier = null
+CrouchingAccelerationMultiplier = null
+SprintingAccelerationMultiplier = null
+MassKg = null
+StepUp = null
+StepForward = null
+StepForwardTest = null
+CosAngleForwardContact = null
+StepDownExtra = null
+StickDown = null
+JumpForceN = null
+TerminalVelocity = null
+GravityMultiplier = null
+StandingHeight = null
+CrouchingHeight = null
+CrouchShapeOffset = null
+LookaroundSpeed = null

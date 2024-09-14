@@ -3,7 +3,7 @@ using Godot;
 
 namespace shootergame.player.script;
 
-public partial class PlayerCharacter : CharacterBody3D
+public partial class CharacterController : CharacterBody3D
 {
     public enum MovementState
     {
@@ -145,7 +145,7 @@ public partial class PlayerCharacter : CharacterBody3D
         if (_cameraController != null && Input.MouseMode == Input.MouseModeEnum.Captured &&
             @event is InputEventMouseMotion mouseMotion)
         {
-            _viewPoint.X += mouseMotion.Relative.X * LookaroundSpeed * LookaroundSpeedReduction;
+            _viewPoint.X += mouseMotion.ScreenRelative.X * LookaroundSpeed * LookaroundSpeedReduction;
             switch (_viewPoint.X)
             {
                 case < -2 * Mathf.Pi:
@@ -156,7 +156,7 @@ public partial class PlayerCharacter : CharacterBody3D
                     break;
             }
 
-            _viewPoint.Y += mouseMotion.Relative.Y * LookaroundSpeed * LookaroundSpeedReduction;
+            _viewPoint.Y += mouseMotion.ScreenRelative.Y * LookaroundSpeed * LookaroundSpeedReduction;
             _viewPoint.Y = (float)Math.Clamp(_viewPoint.Y, -Math.PI / 2, Math.PI / 2);
 
             _cameraController.RotateTo(_viewPoint);

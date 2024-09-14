@@ -7,7 +7,7 @@ namespace shootergame.player.script;
 public partial class PlayerWeapons : Node3D
 {
     [Export]
-    public PlayerCharacter Player;
+    public CharacterController Player;
 
     [Export]
     public ShootingWeapon CurrentWeapon;

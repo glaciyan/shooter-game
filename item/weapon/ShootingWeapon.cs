@@ -44,15 +44,15 @@ public abstract partial class ShootingWeapon : Weapon
         AddChild(_fireRateTimer);
     }
 
-    private PlayerCharacter _currentPlayer;
+    private CharacterController _current;
     private bool _requestShoot;
 
-    public virtual void RequestShooting(PlayerCharacter player)
+    public virtual void RequestShooting(CharacterController player)
     {
         if (_requestShoot) return;
         if (_onCooldown) return;
 
-        _currentPlayer = player;
+        _current = player;
         _requestShoot = true;
 
         Shoot();
@@ -69,7 +69,7 @@ public abstract partial class ShootingWeapon : Weapon
         {
             var bullet = Bullet.Instantiate<DebugBullet>();
             AddChild(bullet);
-            bullet.Shoot(_currentPlayer.AimOrigin, _currentPlayer.AimVector);
+            bullet.Shoot(_current.AimOrigin, _current.AimVector);
             _onCooldown = true;
             _fireRateTimer.Start();
         }
