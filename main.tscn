@@ -1,7 +1,8 @@
-[gd_scene load_steps=11 format=3 uid="uid://c6356ubeoiydj"]
+[gd_scene load_steps=13 format=3 uid="uid://c6356ubeoiydj"]
 
 [ext_resource type="PackedScene" uid="uid://b3gr35vagtxy8" path="res://player/player_character.tscn" id="1_bfuh2"]
 [ext_resource type="Script" path="res://main.gd" id="1_ibyna"]
+[ext_resource type="Script" path="res://RealPlayerManager.cs" id="2_cimxi"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_72qq7"]
 sky_top_color = Color(0.317647, 0.733333, 0.878431, 1)
@@ -30,6 +31,11 @@ size = Vector3(1, 1.76391, 2.7724)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r8oc7"]
 albedo_color = Color(0.913725, 0.203922, 0.4, 1)
+
+[sub_resource type="InputEventKey" id="InputEventKey_4s6vc"]
+device = -1
+keycode = 87
+unicode = 119
 
 [node name="main" type="Node3D"]
 script = ExtResource("1_ibyna")
@@ -203,28 +209,11 @@ transform = Transform3D(0.764078, 0, 0.645124, 0, 1, 0, -0.645124, 0, 0.764078, 
 use_collision = true
 material = SubResource("StandardMaterial3D_r8oc7")
 
-[node name="PlayerCharacter" parent="." instance=ExtResource("1_bfuh2")]
+[node name="RealPlayerManager" type="Node" parent="."]
+script = ExtResource("2_cimxi")
+_testKey = SubResource("InputEventKey_4s6vc")
+
+[node name="PlayerCharacter" parent="RealPlayerManager" instance=ExtResource("1_bfuh2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65872, 1.43481, 2.84615)
-Acceleration = null
-AirAcceleration = null
-MaxVelocity = null
-MaxAirVelocity = null
-Friction = null
-AirStopSpeed = null
-WalkingAccelerationMultiplier = null
-CrouchingAccelerationMultiplier = null
-SprintingAccelerationMultiplier = null
-MassKg = null
-StepUp = null
-StepForward = null
-StepForwardTest = null
-CosAngleForwardContact = null
-StepDownExtra = null
-StickDown = null
-JumpForceN = null
-TerminalVelocity = null
-GravityMultiplier = null
-StandingHeight = null
-CrouchingHeight = null
-CrouchShapeOffset = null
-LookaroundSpeed = null
+
+[connection signal="OnInput" from="RealPlayerManager" to="RealPlayerManager/PlayerCharacter" method="OnInput"]

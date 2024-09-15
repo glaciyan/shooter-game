@@ -105,7 +105,6 @@ public partial class CharacterController : CharacterBody3D
     private Vector2 _viewPoint = new(0.0f, 0.0f);
     private const float LookaroundSpeedReduction = 0.002f;
     private readonly float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
-    private bool _isControlling;
     private float _wishSpeedMultiplier;
     private MovementState _state;
     private Vector3 _cameraPosition;
@@ -125,6 +124,11 @@ public partial class CharacterController : CharacterBody3D
 
     private ShapeCast3D _shapeCast = new();
 
+    private void OnInput(PlayerInput input) 
+    {
+        
+    }
+    
     public override void _Ready()
     {
         _wishSpeedMultiplier = WalkingAccelerationMultiplier;
@@ -136,40 +140,6 @@ public partial class CharacterController : CharacterBody3D
         _shapeCast.Shape = _standingCollision.Shape;
         _shapeCast.DebugShapeCustomColor = new Color(Colors.Aqua);
         AddChild(_shapeCast);
-
-        StartControlling();
-    }
-
-    public override void _Input(InputEvent @event)
-    {
-        if (_cameraController != null && Input.MouseMode == Input.MouseModeEnum.Captured &&
-            @event is InputEventMouseMotion mouseMotion)
-        {
-            _viewPoint.X += mouseMotion.ScreenRelative.X * LookaroundSpeed * LookaroundSpeedReduction;
-            switch (_viewPoint.X)
-            {
-                case < -2 * Mathf.Pi:
-                    _viewPoint.X += 2 * Mathf.Pi;
-                    break;
-                case > 2 * Mathf.Pi:
-                    _viewPoint.X -= 2 * Mathf.Pi;
-                    break;
-            }
-
-            _viewPoint.Y += mouseMotion.ScreenRelative.Y * LookaroundSpeed * LookaroundSpeedReduction;
-            _viewPoint.Y = (float)Math.Clamp(_viewPoint.Y, -Math.PI / 2, Math.PI / 2);
-
-            _cameraController.RotateTo(_viewPoint);
-        }
-
-        if (@event.IsActionPressed("sprint"))
-        {
-            _state = MovementState.Sprinting;
-        }
-        else if (@event.IsActionReleased("sprint"))
-        {
-            _state = MovementState.Walking;
-        }
     }
 
     public override void _Process(double delta)
@@ -210,19 +180,6 @@ public partial class CharacterController : CharacterBody3D
         
         DoWalkStairs(delta, desiredVelocity, oldPosition);
     }
-
-    private void StartControlling()
-    {
-        Input.MouseMode = Input.MouseModeEnum.Captured;
-        _isControlling = true;
-    }
-
-    private void StopControlling()
-    {
-        Input.MouseMode = Input.MouseModeEnum.Visible;
-        _isControlling = false;
-    }
-
 
     private Vector3 _cameraOffsetCrouching = Vector3.Zero;
 

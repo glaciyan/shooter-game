@@ -1,9 +1,9 @@
-[gd_resource type="Resource" script_class="InputActionMapConfig" load_steps=13 format=3 uid="uid://cm0n8cvo0fi4b"]
+[gd_resource type="Resource" load_steps=13 format=3 uid="uid://cm0n8cvo0fi4b"]
 
-[ext_resource type="Script" path="res://input/script/Key4WayVector2Config.cs" id="1_kwb7m"]
-[ext_resource type="Script" path="res://input/script/ValueActionConfig.cs" id="2_f8h0p"]
-[ext_resource type="Script" path="res://input/script/MouseDeltaVector2Config.cs" id="3_djyld"]
-[ext_resource type="Script" path="res://input/script/InputActionMapConfig.cs" id="4_bhovr"]
+[ext_resource type="Script" path="res://input/script/Key4WayVector2Config.cs" id="1_rrq73"]
+[ext_resource type="Script" path="res://input/script/ValueActionConfig.cs" id="2_6f4qk"]
+[ext_resource type="Script" path="res://input/script/MouseDeltaVector2Config.cs" id="3_nvf2c"]
+[ext_resource type="Script" path="res://input/script/InputActionMapConfig.cs" id="4_j58hn"]
 
 [sub_resource type="InputEventKey" id="InputEventKey_sgiil"]
 device = -1
@@ -26,25 +26,25 @@ keycode = 87
 unicode = 119
 
 [sub_resource type="Resource" id="Resource_yycg3"]
-script = ExtResource("1_kwb7m")
+script = ExtResource("1_rrq73")
 Up = SubResource("InputEventKey_nqklj")
 Down = SubResource("InputEventKey_sgiil")
 Left = SubResource("InputEventKey_koubx")
 Right = SubResource("InputEventKey_unjsi")
 
 [sub_resource type="Resource" id="Resource_vkc67"]
-script = ExtResource("2_f8h0p")
+script = ExtResource("2_6f4qk")
 ValueEventMapping = Array[Object]([SubResource("Resource_yycg3")])
 Name = "Move"
 
 [sub_resource type="Resource" id="Resource_ek4jx"]
-script = ExtResource("3_djyld")
+script = ExtResource("3_nvf2c")
 
 [sub_resource type="Resource" id="Resource_g26o2"]
-script = ExtResource("2_f8h0p")
+script = ExtResource("2_6f4qk")
 ValueEventMapping = Array[Object]([SubResource("Resource_ek4jx")])
 Name = "Look"
 
 [resource]
-script = ExtResource("4_bhovr")
+script = ExtResource("4_j58hn")
 Actions = Array[Object]([SubResource("Resource_vkc67"), SubResource("Resource_g26o2")])
